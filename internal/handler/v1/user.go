@@ -8,11 +8,19 @@ import (
 )
 
 type user struct {
+	userSrvc UserSrvc
 }
 
-func newUser(mux *http.ServeMux, app *app.App, prefix string) {
-	u := user{}
+func newUser(
+	mux *http.ServeMux,
+	app *app.App,
+	prefix string,
+	userSrvc UserSrvc,
+) {
 	prefix += "/users"
+	u := user{
+		userSrvc: userSrvc,
+	}
 
 	mux.HandleFunc("GET "+prefix, u.list)
 	mux.HandleFunc("POST "+prefix, u.create)
@@ -22,7 +30,7 @@ func newUser(mux *http.ServeMux, app *app.App, prefix string) {
 }
 
 func (u *user) list(w http.ResponseWriter, r *http.Request) {
-	response.JsonSuccess(w, http.StatusOK, "hello from list")
+	response.JsonSuccess(w, http.StatusOK, u.userSrvc.List())
 }
 
 func (u *user) create(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +38,7 @@ func (u *user) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *user) show(w http.ResponseWriter, r *http.Request) {
-	response.JsonSuccess(w, http.StatusOK, fmt.Sprintf("hello from show %s", r.PathValue("id")))
+	response.JsonSuccess(w, http.StatusOK, u.userSrvc.Show(r.PathValue("id")))
 }
 
 func (u *user) update(w http.ResponseWriter, r *http.Request) {
@@ -38,5 +46,5 @@ func (u *user) update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *user) delete(w http.ResponseWriter, r *http.Request) {
-	response.JsonSuccess(w, http.StatusOK, fmt.Sprintf("hello from delete %s", r.PathValue("id")))
+	response.JsonSuccess(w, http.StatusNoContent, fmt.Sprintf("hello from delete %s", r.PathValue("id")))
 }

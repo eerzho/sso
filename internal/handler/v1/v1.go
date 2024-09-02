@@ -5,6 +5,11 @@ import (
 	"sso/internal/app"
 )
 
-func New(mux *http.ServeMux, app *app.App, prefix string) {
-	newUser(mux, app, prefix)
+func New(
+	mux *http.ServeMux,
+	app *app.App,
+	prefix string,
+	userSrvc UserSrvc,
+) {
+	newUser(mux, app, prefix, userSrvc)
 }
