@@ -20,13 +20,13 @@ func JsonFail(w http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
 	f := fail{Message: err.Error()}
 
-	Json(w, code, f)
+	Json(w, code, &f)
 }
 
 func JsonSuccess(w http.ResponseWriter, code int, data interface{}) {
 	s := success{Data: data}
 
-	Json(w, code, s)
+	Json(w, code, &s)
 }
 
 func Json(w http.ResponseWriter, code int, body interface{}) {

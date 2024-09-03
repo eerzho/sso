@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sso/internal/app"
+	"sso/internal/handler/v1/request"
 	"sso/internal/handler/v1/response"
 )
 
@@ -34,6 +35,14 @@ func (u *user) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *user) create(w http.ResponseWriter, r *http.Request) {
+	var reqDTO request.UserCreate
+
+	err := request.Parse(r, &reqDTO)
+	if err != nil {
+		response.JsonFail(w, err)
+		return
+	}
+
 	response.JsonSuccess(w, http.StatusCreated, "hello from create")
 }
 
