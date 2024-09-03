@@ -16,12 +16,16 @@ func NewRequestLogger(lg *slog.Logger) *RequestLogger {
 	}
 }
 
-func (l *RequestLogger) Mwr(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (rl *RequestLogger) Mwr(next http.Handler) http.Handler {
+	return rl.MwrFunc(next.ServeHTTP)
+}
+
+func (rl *RequestLogger) MwrFunc(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handler.mwr.RequestLogger.Mwr"
 		start := time.Now()
 
-		lg := l.lg.With(
+		lg := rl.lg.With(
 			slog.String("op", op),
 			slog.String("method", r.Method),
 			slog.String("url", r.URL.Path),
@@ -30,5 +34,5 @@ func (l *RequestLogger) Mwr(next http.Handler) http.Handler {
 		lg.Info("start")
 		next.ServeHTTP(w, r)
 		lg.Info("end", slog.Float64("time", time.Since(start).Seconds()))
-	})
+	}
 }
