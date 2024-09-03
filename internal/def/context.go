@@ -1,7 +1,8 @@
 package def
 
-type ContextKey string
+type HeaderKey string
 
 const (
-	RID ContextKey = "X-Request-ID"
+	RequestID   HeaderKey = "X-Request-ID"
+	ContentType HeaderKey = "Content-Type"
 )

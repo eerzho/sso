@@ -3,6 +3,7 @@ package response
 import (
 	"encoding/json"
 	"net/http"
+	"sso/internal/def"
 )
 
 type (
@@ -15,6 +16,8 @@ type (
 		Data interface{} `json:"data"`
 	}
 )
+
+var strangeCaseJson = `{"message": "` + http.StatusText(http.StatusInternalServerError) + `"}`
 
 func JsonFail(w http.ResponseWriter, err error) {
 	code := http.StatusInternalServerError
@@ -30,10 +33,14 @@ func JsonSuccess(w http.ResponseWriter, code int, data interface{}) {
 }
 
 func Json(w http.ResponseWriter, code int, body interface{}) {
-	w.WriteHeader(code)
-	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(body)
+	w.Header().Set(string(def.ContentType), "application/json")
+
+	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, strangeCaseJson, http.StatusInternalServerError)
+		return
 	}
+
+	w.WriteHeader(code)
+	w.Write(jsonBody)
 }
