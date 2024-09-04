@@ -1,82 +1,60 @@
 package srvc
 
 import (
-	"fmt"
+	"context"
+	"sso/internal/dto"
 	"sso/internal/model"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type User struct {
-	users []model.User
+	userRepo UserRepo
 }
 
-func NewUser() *User {
+func NewUser(userRepo UserRepo) *User {
 	return &User{
-		users: make([]model.User, 0),
+		userRepo: userRepo,
 	}
 }
 
-func (u *User) List(page, count int, filters, sorts map[string]string) ([]model.User, error) {
-	return u.users, nil
+func (u *User) List(ctx context.Context, page, count int, filters, sorts map[string]string) ([]model.User, *dto.Pagination, error) {
+	return u.userRepo.List(ctx, page, count, filters, sorts)
 }
 
-func (u *User) Create(email, name, password string) (*model.User, error) {
+func (u *User) Create(ctx context.Context, email, name, password string) (*model.User, error) {
 	user := model.User{
-		ID: primitive.NewObjectID(),
-		Email: email,
-		Name: name,
+		Email:    email,
+		Name:     name,
 		Password: password,
 	}
 
-	u.users = append(u.users, user)
+	err := u.userRepo.Create(ctx, &user)
+	if err != nil {
+		return nil, err
+	}
 
 	return &user, nil
 }
 
-func (u *User) Show(id string) (*model.User, error) {
-	idObj, err := primitive.ObjectIDFromHex(id)
+func (u *User) Show(ctx context.Context, id string) (*model.User, error) {
+	return u.userRepo.GetByID(ctx, id)
+}
+
+func (u *User) Update(ctx context.Context, id, name string) (*model.User, error) {
+	user, err := u.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, user := range u.users {
-		if user.ID == idObj {
-			return &user, nil
-		}
-	}
+	user.Name = name
 
-	return nil, fmt.Errorf("not found")
-}
-
-func (u *User) Update(id, name string) (*model.User, error) {
-	idObj, err := primitive.ObjectIDFromHex(id)
+	err = u.userRepo.Update(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
-	for i, user := range u.users {
-		if user.ID == idObj {
-			u.users[i].Name = name
-			return &u.users[i], nil
-		}
-	}
-
-	return nil, fmt.Errorf("not found")
+	return user, nil
 }
 
-func (u *User) Delete(id string) error {
-	idObj, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return err
-	}
-
-	for i, user := range u.users {
-		if user.ID == idObj {
-			u.users = append(u.users[:i], u.users[i+1:]...)
-			return nil
-		}
-	}
-
-	return fmt.Errorf("not found")
+func (u *User) Delete(ctx context.Context, id string) error {
+	return u.userRepo.Delete(ctx, id)
 }

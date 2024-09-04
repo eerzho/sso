@@ -62,7 +62,7 @@ func GetQueryInt(r *http.Request, key string, defaultValue int) int {
 		return defaultValue
 	}
 
-	valueInt, err := strconv.Atoi(key)
+	valueInt, err := strconv.Atoi(valueStr)
 	if err != nil {
 		return defaultValue
 	}

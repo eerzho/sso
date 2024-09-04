@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"sso/internal/app"
 	"sso/internal/handler"
+	"sso/internal/repo/mongo_repo"
 	"sso/internal/srvc"
 	"syscall"
 	"time"
@@ -28,13 +29,18 @@ func main() {
 }
 
 func setup(app *app.App) *http.Server {
-	userSrvc := srvc.NewUser()
+	// repo
+	userRepo := mongo_repo.NewUser()
+
+	// srvc
+	userSrvc := srvc.NewUser(userRepo)
+
 	return &http.Server{
 		Addr:    fmt.Sprintf(":%s", app.Cfg.HTTP.Port),
-		Handler: handler.New(app,  userSrvc),
+		Handler: handler.New(app, userSrvc),
 	}
 }
- 
+
 func start(server *http.Server, app *app.App, errChan chan<- error) {
 	log.Printf("starting app on port: %s\n", app.Cfg.HTTP.Port)
 	err := server.ListenAndServe()

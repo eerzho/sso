@@ -32,7 +32,8 @@ func newUser(
 func (u *user) list(w http.ResponseWriter, r *http.Request) {
 	search := request.GetQuerySearch(r)
 
-	users, err := u.userSrvc.List(
+	users, pagination, err := u.userSrvc.List(
+		r.Context(),
 		search.Pagination.Page,
 		search.Pagination.Count,
 		search.Filters,
@@ -43,7 +44,7 @@ func (u *user) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JsonSuccess(w, http.StatusOK, users)
+	response.JsonList(w, users, pagination)
 }
 
 func (u *user) create(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +56,12 @@ func (u *user) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.userSrvc.Create(req.Email, req.Name, req.Password)
+	user, err := u.userSrvc.Create(
+		r.Context(),
+		req.Email,
+		req.Name,
+		req.Password,
+	)
 	if err != nil {
 		response.JsonFail(w, err)
 		return
@@ -67,7 +73,7 @@ func (u *user) create(w http.ResponseWriter, r *http.Request) {
 func (u *user) show(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	user, err := u.userSrvc.Show(id)
+	user, err := u.userSrvc.Show(r.Context(), id)
 	if err != nil {
 		response.JsonFail(w, err)
 		return
@@ -86,7 +92,7 @@ func (u *user) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.userSrvc.Update(id, req.Name)
+	user, err := u.userSrvc.Update(r.Context(), id, req.Name)
 	if err != nil {
 		response.JsonFail(w, err)
 		return
@@ -98,7 +104,7 @@ func (u *user) update(w http.ResponseWriter, r *http.Request) {
 func (u *user) delete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	err := u.userSrvc.Delete(id)
+	err := u.userSrvc.Delete(r.Context(), id)
 	if err != nil {
 		response.JsonFail(w, err)
 		return

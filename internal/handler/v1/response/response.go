@@ -15,6 +15,11 @@ type (
 	success struct {
 		Data interface{} `json:"data,omitempty"`
 	}
+
+	list struct {
+		Data       interface{} `json:"data"`
+		Pagination interface{} `json:"pagination,omitempty"`
+	}
 )
 
 var strangeCaseJson = `{"message": "` + http.StatusText(http.StatusInternalServerError) + `"}`
@@ -30,6 +35,15 @@ func JsonSuccess(w http.ResponseWriter, code int, data interface{}) {
 	s := success{Data: data}
 
 	Json(w, code, &s)
+}
+
+func JsonList(w http.ResponseWriter, data, pagination interface{}) {
+	l := list{
+		Data:       data,
+		Pagination: pagination,
+	}
+
+	Json(w, http.StatusOK, &l)
 }
 
 func Json(w http.ResponseWriter, code int, body interface{}) {
