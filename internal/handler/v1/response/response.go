@@ -13,7 +13,7 @@ type (
 	}
 
 	success struct {
-		Data interface{} `json:"data"`
+		Data interface{} `json:"data,omitempty"`
 	}
 )
 

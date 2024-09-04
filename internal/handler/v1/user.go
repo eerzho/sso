@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"sso/internal/app"
 	"sso/internal/handler/v1/request"
@@ -31,29 +30,79 @@ func newUser(
 }
 
 func (u *user) list(w http.ResponseWriter, r *http.Request) {
-	response.JsonSuccess(w, http.StatusOK, u.userSrvc.List())
-}
+	search := request.GetQuerySearch(r)
 
-func (u *user) create(w http.ResponseWriter, r *http.Request) {
-	var reqDTO request.UserCreate
-
-	err := request.Parse(r, &reqDTO)
+	users, err := u.userSrvc.List(
+		search.Pagination.Page,
+		search.Pagination.Count,
+		search.Filters,
+		search.Sorts,
+	)
 	if err != nil {
 		response.JsonFail(w, err)
 		return
 	}
 
-	response.JsonSuccess(w, http.StatusCreated, "hello from create")
+	response.JsonSuccess(w, http.StatusOK, users)
+}
+
+func (u *user) create(w http.ResponseWriter, r *http.Request) {
+	var req request.UserCreate
+
+	err := request.ParseBody(r, &req)
+	if err != nil {
+		response.JsonFail(w, err)
+		return
+	}
+
+	user, err := u.userSrvc.Create(req.Email, req.Name, req.Password)
+	if err != nil {
+		response.JsonFail(w, err)
+		return
+	}
+
+	response.JsonSuccess(w, http.StatusCreated, user)
 }
 
 func (u *user) show(w http.ResponseWriter, r *http.Request) {
-	response.JsonSuccess(w, http.StatusOK, u.userSrvc.Show(r.PathValue("id")))
+	id := r.PathValue("id")
+
+	user, err := u.userSrvc.Show(id)
+	if err != nil {
+		response.JsonFail(w, err)
+		return
+	}
+
+	response.JsonSuccess(w, http.StatusOK, user)
 }
 
 func (u *user) update(w http.ResponseWriter, r *http.Request) {
-	response.JsonSuccess(w, http.StatusOK, fmt.Sprintf("hello from update %s", r.PathValue("id")))
+	id := r.PathValue("id")
+	var req request.UserUpdate
+
+	err := request.ParseBody(r, &req)
+	if err != nil {
+		response.JsonFail(w, err)
+		return
+	}
+
+	user, err := u.userSrvc.Update(id, req.Name)
+	if err != nil {
+		response.JsonFail(w, err)
+		return
+	}
+
+	response.JsonSuccess(w, http.StatusOK, user)
 }
 
 func (u *user) delete(w http.ResponseWriter, r *http.Request) {
-	response.JsonSuccess(w, http.StatusNoContent, fmt.Sprintf("hello from delete %s", r.PathValue("id")))
+	id := r.PathValue("id")
+
+	err := u.userSrvc.Delete(id)
+	if err != nil {
+		response.JsonFail(w, err)
+		return
+	}
+
+	response.JsonSuccess(w, http.StatusNoContent, nil)
 }
