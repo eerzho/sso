@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/joho/godotenv"
 )
 
 type (
@@ -36,11 +35,6 @@ type (
 
 func New() (*Config, error) {
 	const op = "config.New"
-
-	// TODO: remove godotenv.Load
-	if err := godotenv.Load(); err != nil { 
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
 
 	cfg := Config{}
 
