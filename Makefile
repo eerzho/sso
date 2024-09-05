@@ -26,8 +26,8 @@ endif
 
 restart:
 ifdef name
-	$(MAKE) down $(name)
-	$(MAKE) up $(name)
+	$(MAKE) down name=$(name)
+	$(MAKE) up name=$(name)
 else 
 	$(MAKE) down
 	$(MAKE) up

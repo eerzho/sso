@@ -22,9 +22,9 @@ func (req *RequestID) Mwr(next http.Handler) http.Handler {
 func (req *RequestID) MwrFunc(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqID := uuid.New().String()
-		w.Header().Set(string(def.RequestID), reqID)
-		ctx := context.WithValue(r.Context(), def.RequestID, reqID)
-		
+		w.Header().Set(def.HeaderRequestID.String(), reqID)
+		ctx := context.WithValue(r.Context(), def.HeaderRequestID, reqID)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }

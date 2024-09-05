@@ -54,7 +54,7 @@ func wait(errChan <-chan error, stopChan <-chan os.Signal) {
 	case <-stopChan:
 		log.Println("stopping app...")
 	case err := <-errChan:
-		log.Fatalf("server: %v", err)
+		panic(err)
 	}
 }
 
@@ -64,7 +64,7 @@ func shutdown(server *http.Server) {
 
 	err := server.Shutdown(ctx)
 	if err != nil {
-		log.Fatalf("shutdown: %v", err)
+		panic(err)
 	}
 
 	log.Println("server stopped gracefully")

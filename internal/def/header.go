@@ -3,6 +3,10 @@ package def
 type HeaderKey string
 
 const (
-	RequestID   HeaderKey = "X-Request-Id"
-	ContentType HeaderKey = "Content-Type"
+	HeaderRequestID   HeaderKey = "X-Request-Id"
+	HeaderContentType HeaderKey = "Content-Type"
 )
+
+func (hk HeaderKey) String() string {
+	return string(hk)
+}

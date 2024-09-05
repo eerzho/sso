@@ -47,7 +47,7 @@ func JsonList(w http.ResponseWriter, data, pagination interface{}) {
 }
 
 func Json(w http.ResponseWriter, code int, body interface{}) {
-	w.Header().Set(string(def.ContentType), "application/json")
+	w.Header().Set(def.HeaderContentType.String(), "application/json")
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {

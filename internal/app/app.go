@@ -1,7 +1,6 @@
 package app
 
 import (
-	"log"
 	"log/slog"
 	"sso/internal/config"
 	"sso/internal/util"
@@ -30,7 +29,7 @@ func MustNew() *App {
 func mustSetupConfig() *config.Config {
 	cfg, err := config.New()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	return cfg
@@ -45,7 +44,7 @@ func mustSetupLogger(cfg *config.Config) *slog.Logger {
 func mustSetupMongo(cfg *config.Config) *mongo.Database {
 	mng, err := util.NewMongo(cfg.Mongo.DB, cfg.Mongo.URL)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	return mng
