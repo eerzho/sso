@@ -3,6 +3,7 @@ package mwr
 import (
 	"log/slog"
 	"net/http"
+	"sso/internal/def"
 	"time"
 )
 
@@ -22,11 +23,10 @@ func (rl *RequestLogger) Mwr(next http.Handler) http.Handler {
 
 func (rl *RequestLogger) MwrFunc(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handler.mwr.RequestLogger.Mwr"
 		start := time.Now()
 
 		lg := rl.lg.With(
-			slog.String("op", op),
+			slog.Any(def.HeaderRequestID.String(), r.Context().Value(def.HeaderRequestID)),
 			slog.String("method", r.Method),
 			slog.String("url", r.URL.Path),
 		)

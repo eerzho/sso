@@ -9,9 +9,17 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-var validate = validator.New(validator.WithRequiredStructEnabled())
+type Parser struct {
+	validate *validator.Validate
+}
 
-func ParseBody(r *http.Request, req interface{}) error {
+func NewParser() *Parser {
+	return &Parser{
+		validate: validator.New(validator.WithRequiredStructEnabled()),
+	}
+}
+
+func (p *Parser) ParseBody(r *http.Request, req interface{}) error {
 	decoder := json.NewDecoder(r.Body)
 
 	err := decoder.Decode(req)
@@ -19,7 +27,7 @@ func ParseBody(r *http.Request, req interface{}) error {
 		return err
 	}
 
-	err = validate.Struct(req)
+	err = p.validate.Struct(req)
 	if err != nil {
 		return err
 	}
@@ -27,20 +35,20 @@ func ParseBody(r *http.Request, req interface{}) error {
 	return nil
 }
 
-func GetQuerySearch(r *http.Request) *Search {
+func (p *Parser) GetQuerySearch(r *http.Request) *Search {
 	return &Search{
 		Pagination: Pagination{
-			Page:  GetQueryInt(r, "pagination[page]", 1),
-			Count: GetQueryInt(r, "pagination[count]", 10),
+			Page:  p.GetQueryInt(r, "pagination[page]", 1),
+			Count: p.GetQueryInt(r, "pagination[count]", 10),
 		},
-		Filters: GetQueryMap(r, "filters"),
-		Sorts:   GetQueryMap(r, "sorts"),
+		Filters: p.GetQueryMap(r, "filters"),
+		Sorts:   p.GetQueryMap(r, "sorts"),
 	}
 }
 
-func GetQueryMap(r *http.Request, key string) map[string]string {
+func (p *Parser) GetQueryMap(r *http.Request, key string) map[string]string {
 	valuesMap := make(map[string]string)
-	
+
 	for queryKey, values := range r.URL.Query() {
 		if strings.HasPrefix(queryKey, key+"[") && strings.HasSuffix(queryKey, "]") {
 			fieldName := strings.TrimSuffix(strings.TrimPrefix(queryKey, key+"["), "]")
@@ -53,7 +61,7 @@ func GetQueryMap(r *http.Request, key string) map[string]string {
 	return valuesMap
 }
 
-func GetQueryInt(r *http.Request, key string, defaultValue int) int {
+func (p *Parser) GetQueryInt(r *http.Request, key string, defaultValue int) int {
 	valueStr := r.URL.Query().Get(key)
 	if valueStr == "" {
 		return defaultValue

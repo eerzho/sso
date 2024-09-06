@@ -3,11 +3,17 @@ package response
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"sso/internal/def"
 )
 
 type (
+	Builder struct {
+		lg              *slog.Logger
+		strangeCaseJson string
+	}
+
 	fail struct {
 		Data    interface{} `json:"data,omitempty"`
 		Message string      `json:"message"`
@@ -23,10 +29,15 @@ type (
 	}
 )
 
-var strangeCaseJson = `{"message": "` + http.StatusText(http.StatusInternalServerError) + `"}`
+func NewBuilder(lg *slog.Logger) *Builder {
+	return &Builder{
+		lg:              lg,
+		strangeCaseJson: `{"message": "` + http.StatusText(http.StatusInternalServerError) + `"}`,
+	}
+}
 
-func JsonFail(w http.ResponseWriter, err error) {
-	f := fail{Message: originalErr(err).Error()}
+func (b *Builder) JsonFail(r *http.Request, w http.ResponseWriter, err error) {
+	f := fail{Message: b.originalErr(err).Error()}
 
 	code := http.StatusInternalServerError
 	if errors.Is(err, def.ErrNotFound) {
@@ -35,30 +46,33 @@ func JsonFail(w http.ResponseWriter, err error) {
 		code = http.StatusBadRequest
 	}
 
-	Json(w, code, &f)
+	b.logFail(r, code, err)
+	b.Json(w, code, &f)
 }
 
-func JsonSuccess(w http.ResponseWriter, code int, data interface{}) {
+func (b *Builder) JsonSuccess(r *http.Request, w http.ResponseWriter, code int, data interface{}) {
 	s := success{Data: data}
 
-	Json(w, code, &s)
+	b.logSuccess(r, code)
+	b.Json(w, code, &s)
 }
 
-func JsonList(w http.ResponseWriter, data, pagination interface{}) {
+func (b *Builder) JsonList(r *http.Request, w http.ResponseWriter, data, pagination interface{}) {
 	l := list{
 		Data:       data,
 		Pagination: pagination,
 	}
 
-	Json(w, http.StatusOK, &l)
+	b.logSuccess(r, http.StatusOK)
+	b.Json(w, http.StatusOK, &l)
 }
 
-func Json(w http.ResponseWriter, code int, body interface{}) {
+func (b *Builder) Json(w http.ResponseWriter, code int, body interface{}) {
 	w.Header().Set(def.HeaderContentType.String(), "application/json")
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		http.Error(w, strangeCaseJson, http.StatusInternalServerError)
+		http.Error(w, b.strangeCaseJson, http.StatusInternalServerError)
 		return
 	}
 
@@ -66,10 +80,36 @@ func Json(w http.ResponseWriter, code int, body interface{}) {
 	w.Write(jsonBody)
 }
 
-func originalErr(err error) error {
+func (b *Builder) originalErr(err error) error {
 	unwrappedErr := errors.Unwrap(err)
 	if unwrappedErr == nil {
 		return err
 	}
-	return originalErr(unwrappedErr)
+	return b.originalErr(unwrappedErr)
+}
+
+func (b *Builder) logFail(r *http.Request, code int, err error) {
+	lg := b.lg.With(
+		slog.Any(def.HeaderRequestID.String(), r.Context().Value(def.HeaderRequestID)),
+		slog.String("method", r.Method),
+		slog.String("url", r.URL.Path),
+		slog.Int("status", code),
+	)
+
+	if code >= http.StatusInternalServerError {
+		lg.Error(err.Error())
+	} else {
+		lg.Debug(err.Error())
+	}
+}
+
+func (b *Builder) logSuccess(r *http.Request, code int) {
+	lg := b.lg.With(
+		slog.Any(def.HeaderRequestID.String(), r.Context().Value(def.HeaderRequestID)),
+		slog.String("method", r.Method),
+		slog.String("url", r.URL.Path),
+		slog.Int("status", code),
+	)
+
+	lg.Debug("success")
 }
