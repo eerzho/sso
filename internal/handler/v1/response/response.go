@@ -2,6 +2,7 @@ package response
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"sso/internal/def"
 )
@@ -25,8 +26,14 @@ type (
 var strangeCaseJson = `{"message": "` + http.StatusText(http.StatusInternalServerError) + `"}`
 
 func JsonFail(w http.ResponseWriter, err error) {
+	f := fail{Message: originalErr(err).Error()}
+
 	code := http.StatusInternalServerError
-	f := fail{Message: err.Error()}
+	if errors.Is(err, def.ErrNotFound) {
+		code = http.StatusNotFound
+	} else if errors.Is(err, def.ErrAlreadyExists) {
+		code = http.StatusBadRequest
+	}
 
 	Json(w, code, &f)
 }
@@ -57,4 +64,12 @@ func Json(w http.ResponseWriter, code int, body interface{}) {
 
 	w.WriteHeader(code)
 	w.Write(jsonBody)
+}
+
+func originalErr(err error) error {
+	unwrappedErr := errors.Unwrap(err)
+	if unwrappedErr == nil {
+		return err
+	}
+	return originalErr(unwrappedErr)
 }

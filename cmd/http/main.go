@@ -30,7 +30,7 @@ func main() {
 
 func setup(app *app.App) *http.Server {
 	// repo
-	userRepo := mongo_repo.NewUser()
+	userRepo := mongo_repo.NewUser(app.Mng)
 
 	// srvc
 	userSrvc := srvc.NewUser(userRepo)

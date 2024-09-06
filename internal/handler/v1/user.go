@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
 	"sso/internal/app"
 	"sso/internal/handler/v1/request"
@@ -8,6 +10,7 @@ import (
 )
 
 type user struct {
+	lg       *slog.Logger
 	userSrvc UserSrvc
 }
 
@@ -19,6 +22,7 @@ func newUser(
 ) {
 	prefix += "/users"
 	u := user{
+		lg:       app.Lg,
 		userSrvc: userSrvc,
 	}
 
@@ -30,6 +34,8 @@ func newUser(
 }
 
 func (u *user) list(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.user.list"
+
 	search := request.GetQuerySearch(r)
 
 	users, pagination, err := u.userSrvc.List(
@@ -40,7 +46,7 @@ func (u *user) list(w http.ResponseWriter, r *http.Request) {
 		search.Sorts,
 	)
 	if err != nil {
-		response.JsonFail(w, err)
+		response.JsonFail(w, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
@@ -48,11 +54,13 @@ func (u *user) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *user) create(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.user.create"
+
 	var req request.UserCreate
 
 	err := request.ParseBody(r, &req)
 	if err != nil {
-		response.JsonFail(w, err)
+		response.JsonFail(w, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
@@ -63,7 +71,7 @@ func (u *user) create(w http.ResponseWriter, r *http.Request) {
 		req.Password,
 	)
 	if err != nil {
-		response.JsonFail(w, err)
+		response.JsonFail(w, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
@@ -71,11 +79,13 @@ func (u *user) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *user) show(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.user.show"
+
 	id := r.PathValue("id")
 
 	user, err := u.userSrvc.Show(r.Context(), id)
 	if err != nil {
-		response.JsonFail(w, err)
+		response.JsonFail(w, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
@@ -83,18 +93,20 @@ func (u *user) show(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *user) update(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.user.update"
+
 	id := r.PathValue("id")
 	var req request.UserUpdate
 
 	err := request.ParseBody(r, &req)
 	if err != nil {
-		response.JsonFail(w, err)
+		response.JsonFail(w, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
 	user, err := u.userSrvc.Update(r.Context(), id, req.Name)
 	if err != nil {
-		response.JsonFail(w, err)
+		response.JsonFail(w, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
@@ -102,11 +114,13 @@ func (u *user) update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *user) delete(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.user.delete"
+
 	id := r.PathValue("id")
 
 	err := u.userSrvc.Delete(r.Context(), id)
 	if err != nil {
-		response.JsonFail(w, err)
+		response.JsonFail(w, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 

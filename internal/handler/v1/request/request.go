@@ -45,9 +45,6 @@ func GetQueryMap(r *http.Request, key string) map[string]string {
 		if strings.HasPrefix(queryKey, key+"[") && strings.HasSuffix(queryKey, "]") {
 			fieldName := strings.TrimSuffix(strings.TrimPrefix(queryKey, key+"["), "]")
 			if len(values) > 0 {
-				if key == "sorts" && (values[0] != "asc" && values[0] != "desc") {
-					continue
-				}
 				valuesMap[fieldName] = values[0]
 			}
 		}
