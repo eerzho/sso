@@ -9,8 +9,6 @@ import (
 	"os/signal"
 	"sso/internal/app"
 	"sso/internal/handler"
-	"sso/internal/repo/mongo_repo"
-	"sso/internal/srvc"
 	"syscall"
 	"time"
 )
@@ -29,18 +27,9 @@ func main() {
 }
 
 func setup(app *app.App) *http.Server {
-	// repo
-	userRepo := mongo_repo.NewUser(app.Mng)
-	refreshTokenRepo := mongo_repo.NewRefreshToken(app.Mng)
-
-	// srvc
-	userSrvc := srvc.NewUser(userRepo)
-	refreshTokenSrvc := srvc.NewRefreshToken(refreshTokenRepo)
-	authSrvc := srvc.NewAuth(app.Cfg.JWT.Secret, userSrvc, refreshTokenSrvc)
-
 	return &http.Server{
 		Addr:    fmt.Sprintf(":%s", app.Cfg.HTTP.Port),
-		Handler: handler.New(app, userSrvc, authSrvc),
+		Handler: handler.New(app),
 	}
 }
 

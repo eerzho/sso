@@ -4,16 +4,24 @@ import (
 	"net/http"
 	"sso/internal/app"
 	v1 "sso/internal/handler/v1"
+	"sso/internal/repo/mongo_repo"
+	"sso/internal/srvc"
 )
 
-func New(
-	app *app.App,
-	userSrvc v1.UserSrvc,
-	authSrvc v1.AuthSrvc,
-) http.Handler {
+func New(app *app.App) http.Handler {
 	mux := http.NewServeMux()
 
-	handler := v1.New(mux, app, "/api/v1", userSrvc, authSrvc)
+	// repo
+	userRepo := mongo_repo.NewUser(app.Mng)
+	refreshTokenRepo := mongo_repo.NewRefreshToken(app.Mng)
+
+	// srvc
+	userSrvc := srvc.NewUser(userRepo)
+	refreshTokenSrvc := srvc.NewRefreshToken(refreshTokenRepo)
+	authSrvc := srvc.NewAuth(app.Cfg.JWT.Secret, userSrvc, refreshTokenSrvc)
+
+	// handler
+	handler := v1.New(mux, app.Lg, "/api/v1", userSrvc, authSrvc)
 
 	return handler
 }
