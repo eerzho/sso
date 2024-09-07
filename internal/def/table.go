@@ -3,7 +3,8 @@ package def
 type TableName string
 
 const (
-	TableUsers TableName = "users"
+	TableUsers         TableName = "users"
+	TableRefreshTokens TableName = "refresh_tokens"
 )
 
 func (tn TableName) String() string {

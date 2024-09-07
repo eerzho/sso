@@ -36,7 +36,7 @@ func NewBuilder(lg *slog.Logger) *Builder {
 	}
 }
 
-func (b *Builder) JsonFail(r *http.Request, w http.ResponseWriter, err error) {
+func (b *Builder) JsonFail(w http.ResponseWriter, r *http.Request, err error) {
 	f := fail{Message: b.originalErr(err).Error()}
 
 	code := http.StatusInternalServerError
@@ -44,20 +44,22 @@ func (b *Builder) JsonFail(r *http.Request, w http.ResponseWriter, err error) {
 		code = http.StatusNotFound
 	} else if errors.Is(err, def.ErrAlreadyExists) {
 		code = http.StatusBadRequest
+	} else if errors.Is(err, def.ErrInvalidCredential) {
+		code = http.StatusUnauthorized
 	}
 
 	b.logFail(r, code, err)
 	b.Json(w, code, &f)
 }
 
-func (b *Builder) JsonSuccess(r *http.Request, w http.ResponseWriter, code int, data interface{}) {
+func (b *Builder) JsonSuccess(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	s := success{Data: data}
 
 	b.logSuccess(r, code)
 	b.Json(w, code, &s)
 }
 
-func (b *Builder) JsonList(r *http.Request, w http.ResponseWriter, data, pagination interface{}) {
+func (b *Builder) JsonList(w http.ResponseWriter, r *http.Request, data, pagination interface{}) {
 	l := list{
 		Data:       data,
 		Pagination: pagination,

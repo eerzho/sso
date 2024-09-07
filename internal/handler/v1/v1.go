@@ -13,11 +13,13 @@ func New(
 	app *app.App,
 	prefix string,
 	userSrvc UserSrvc,
+	authSrvc AuthSrvc,
 ) http.Handler {
 	rp := request.NewParser()
 	rb := response.NewBuilder(app.Lg)
 
-	newUser(mux, rp, rb, prefix, userSrvc)
+	newUser(mux, prefix, rp, rb, userSrvc)
+	newAuth(mux, prefix, rp, rb, authSrvc)
 
 	reqIDMwr := mwr.NewRequestId()
 	reqLgMwr := mwr.NewRequestLogger(app.Lg)

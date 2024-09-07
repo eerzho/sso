@@ -2,7 +2,9 @@ package request
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
+	"sso/internal/def"
 	"strconv"
 	"strings"
 
@@ -73,4 +75,17 @@ func (p *Parser) GetQueryInt(r *http.Request, key string, defaultValue int) int 
 	}
 
 	return valueInt
+}
+
+func (p *Parser) GetHeaderIP(r *http.Request) string {
+	forwardedFor := r.Header.Get(def.HeaderForwardedFor.String())
+	if forwardedFor != "" {
+		ips := strings.Split(forwardedFor, ",")
+
+		return strings.TrimSpace(ips[0])
+	}
+
+	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+	
+	return ip
 }

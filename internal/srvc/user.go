@@ -100,3 +100,14 @@ func (u *User) Delete(ctx context.Context, id string) error {
 
 	return nil
 }
+
+func (u *User) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	const op = "srvc.User.GetByEmail"
+
+	user, err := u.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}

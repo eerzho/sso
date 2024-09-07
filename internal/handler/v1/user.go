@@ -15,9 +15,9 @@ type user struct {
 
 func newUser(
 	mux *http.ServeMux,
+	prefix string,
 	rp *request.Parser,
 	rb *response.Builder,
-	prefix string,
 	userSrvc UserSrvc,
 ) {
 	prefix += "/users"
@@ -47,21 +47,20 @@ func (u *user) list(w http.ResponseWriter, r *http.Request) {
 		search.Sorts,
 	)
 	if err != nil {
-		u.rb.JsonFail(r, w, fmt.Errorf("%s: %w", op, err))
+		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
-	u.rb.JsonList(r, w, users, pagination)
+	u.rb.JsonList(w, r, users, pagination)
 }
 
 func (u *user) create(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.user.create"
 
 	var req request.UserCreate
-
 	err := u.rp.ParseBody(r, &req)
 	if err != nil {
-		u.rb.JsonFail(r, w, fmt.Errorf("%s: %w", op, err))
+		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
@@ -72,11 +71,11 @@ func (u *user) create(w http.ResponseWriter, r *http.Request) {
 		req.Password,
 	)
 	if err != nil {
-		u.rb.JsonFail(r, w, fmt.Errorf("%s: %w", op, err))
+		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
-	u.rb.JsonSuccess(r, w, http.StatusCreated, user)
+	u.rb.JsonSuccess(w, r, http.StatusCreated, user)
 }
 
 func (u *user) show(w http.ResponseWriter, r *http.Request) {
@@ -86,11 +85,11 @@ func (u *user) show(w http.ResponseWriter, r *http.Request) {
 
 	user, err := u.userSrvc.Show(r.Context(), id)
 	if err != nil {
-		u.rb.JsonFail(r, w, fmt.Errorf("%s: %w", op, err))
+		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
-	u.rb.JsonSuccess(r, w, http.StatusOK, user)
+	u.rb.JsonSuccess(w, r, http.StatusOK, user)
 }
 
 func (u *user) update(w http.ResponseWriter, r *http.Request) {
@@ -101,17 +100,17 @@ func (u *user) update(w http.ResponseWriter, r *http.Request) {
 
 	err := u.rp.ParseBody(r, &req)
 	if err != nil {
-		u.rb.JsonFail(r, w, fmt.Errorf("%s: %w", op, err))
+		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
 	user, err := u.userSrvc.Update(r.Context(), id, req.Name)
 	if err != nil {
-		u.rb.JsonFail(r, w, fmt.Errorf("%s: %w", op, err))
+		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
-	u.rb.JsonSuccess(r, w, http.StatusOK, user)
+	u.rb.JsonSuccess(w, r, http.StatusOK, user)
 }
 
 func (u *user) delete(w http.ResponseWriter, r *http.Request) {
@@ -121,9 +120,9 @@ func (u *user) delete(w http.ResponseWriter, r *http.Request) {
 
 	err := u.userSrvc.Delete(r.Context(), id)
 	if err != nil {
-		u.rb.JsonFail(r, w, fmt.Errorf("%s: %w", op, err))
+		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
-	u.rb.JsonSuccess(r, w, http.StatusNoContent, nil)
+	u.rb.JsonSuccess(w, r, http.StatusNoContent, nil)
 }

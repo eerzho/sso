@@ -184,3 +184,20 @@ func (u *User) IsExistsEmail(ctx context.Context, email string) (bool, error) {
 
 	return count > 0, nil
 }
+
+func (u *User) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	const op = "mongo_repo.User.GetByEmail"
+
+	filter := bson.M{"email": email}
+	var user model.User
+
+	err := u.collection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("%s: %w", op, def.ErrNotFound)
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &user, nil
+}
