@@ -21,7 +21,7 @@ func New(app *app.App) http.Handler {
 	authSrvc := srvc.NewAuth(app.Cfg.JWT.Secret, userSrvc, refreshTokenSrvc)
 
 	// handler
-	handler := v1.New(mux, app.Lg, "/api/v1", userSrvc, authSrvc)
+	handler := v1.New(mux, app, "/api/v1", userSrvc, authSrvc)
 
 	return handler
 }

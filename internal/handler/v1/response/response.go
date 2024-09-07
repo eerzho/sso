@@ -10,6 +10,7 @@ import (
 
 type (
 	Builder struct {
+		isDebug         bool
 		lg              *slog.Logger
 		strangeCaseJson string
 	}
@@ -29,17 +30,18 @@ type (
 	}
 )
 
-func NewBuilder(lg *slog.Logger) *Builder {
+func NewBuilder(isDebug bool, lg *slog.Logger) *Builder {
 	return &Builder{
+		isDebug:         isDebug,
 		lg:              lg,
 		strangeCaseJson: `{"message": "` + http.StatusText(http.StatusInternalServerError) + `"}`,
 	}
 }
 
 func (b *Builder) JsonFail(w http.ResponseWriter, r *http.Request, err error) {
-	f := fail{Message: b.originalErr(err).Error()}
-
 	code := http.StatusInternalServerError
+	msg := b.originalErr(err).Error()
+
 	if errors.Is(err, def.ErrNotFound) {
 		code = http.StatusNotFound
 	} else if errors.Is(err, def.ErrAlreadyExists) ||
@@ -59,6 +61,12 @@ func (b *Builder) JsonFail(w http.ResponseWriter, r *http.Request, err error) {
 	} else if errors.Is(err, def.ErrCannotLogin) {
 		code = http.StatusForbidden
 	}
+
+	if !b.isDebug && code == http.StatusInternalServerError {
+		msg = http.StatusText(code)
+	}
+
+	f := fail{Message: msg}
 
 	b.logFail(r, code, err)
 	b.Json(w, code, &f)

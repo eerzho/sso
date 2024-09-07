@@ -8,6 +8,7 @@ import (
 
 type (
 	Config struct {
+		IsDebug bool `env:"IS_DEBUG" env-default:"0"`
 		HTTP  HTTP
 		Log   Log
 		Mongo Mongo
