@@ -36,6 +36,18 @@ func newUser(
 	mux.HandleFunc("DELETE "+prefix+"/{id}", authMwr.MwrFunc(u.delete))
 }
 
+// @Summary users list
+// @Tags users
+// @Security BearerAuth
+// @Router /v1/users [get]
+// @Param pagination[page] query int false "page"
+// @Param pagination[count] query int false "count"
+// @Param sorts[created_at] query string false "created_at" Enums(asc, desc)
+// @Param sorts[updated_at] query string false "updated_at" Enums(asc, desc)
+// @Param filters[name] query string false "name"
+// @Param filters[email] query string false "email"
+// @Produce json
+// @Success 200 {object} response.list{data=[]model.User,pagination=dto.Pagination}
 func (u *user) list(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.user.list"
 
@@ -56,6 +68,13 @@ func (u *user) list(w http.ResponseWriter, r *http.Request) {
 	u.rb.JsonList(w, r, users, pagination)
 }
 
+// @Summary registration
+// @Tags users
+// @Router /v1/users [post]
+// @Accept json
+// @Param body body request.UserCreate true "user create request"
+// @Produce json
+// @Success 201 {object} response.success{data=model.User}
 func (u *user) create(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.user.create"
 
@@ -80,6 +99,13 @@ func (u *user) create(w http.ResponseWriter, r *http.Request) {
 	u.rb.JsonSuccess(w, r, http.StatusCreated, user)
 }
 
+// @Summary get user by id
+// @Tags users
+// @Security BearerAuth
+// @Router /v1/users/{id} [get]
+// @Param id path string true "user id"
+// @Produce json
+// @Success 200 {object} response.success{data=model.User}
 func (u *user) show(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.user.show"
 
@@ -94,6 +120,15 @@ func (u *user) show(w http.ResponseWriter, r *http.Request) {
 	u.rb.JsonSuccess(w, r, http.StatusOK, user)
 }
 
+// @Summary update profile
+// @Tags users
+// @Security BearerAuth
+// @Router /v1/users/{id} [patch]
+// @Accept json
+// @Param id path string true "user id"
+// @Param body body request.UserUpdate true "user update request"
+// @Produce json
+// @Success 200 {object} response.success{data=model.User}
 func (u *user) update(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.user.update"
 
@@ -115,6 +150,12 @@ func (u *user) update(w http.ResponseWriter, r *http.Request) {
 	u.rb.JsonSuccess(w, r, http.StatusOK, user)
 }
 
+// @Summary delete user by id
+// @Tags users
+// @Security BearerAuth
+// @Router /v1/users/{id} [delete]
+// @Param id path string true "user id"
+// @Success 204
 func (u *user) delete(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.user.delete"
 

@@ -34,6 +34,13 @@ func newAuth(
 	mux.HandleFunc("POST "+prefix+"/refresh", a.refresh)
 }
 
+// @Summary login
+// @Tags auth
+// @Router /v1/auth [post]
+// @Accept json
+// @Param body body request.Login true "login request"
+// @Produce json
+// @Success 200 {object} response.success{data=dto.Token}
 func (a *auth) login(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.auth.login"
 
@@ -53,6 +60,12 @@ func (a *auth) login(w http.ResponseWriter, r *http.Request) {
 	a.rb.JsonSuccess(w, r, http.StatusOK, token)
 }
 
+// @Summary get auth user
+// @Tags auth
+// @Security BearerAuth
+// @Router /v1/auth [get]
+// @Produce json
+// @Success 200 {object} response.success{data=model.User}
 func (a *auth) me(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.auth.me"
 
@@ -65,6 +78,13 @@ func (a *auth) me(w http.ResponseWriter, r *http.Request) {
 	a.rb.JsonSuccess(w, r, http.StatusOK, user)
 }
 
+// @Summary refresh token
+// @Tags auth
+// @Router /v1/auth/refresh [post]
+// @Accept json
+// @Param body body request.Refresh true "token refresh request"
+// @Produce json
+// @Success 200 {object} response.success{data=dto.Token}
 func (a *auth) refresh(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.auth.refresh"
 

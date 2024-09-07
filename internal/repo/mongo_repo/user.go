@@ -38,8 +38,6 @@ func (u *User) List(ctx context.Context, page, count int, filters, sorts map[str
 	for key, value := range filters {
 		if key == "name" || key == "email" {
 			filter[key] = bson.M{"$regex": value, "$options": "i"}
-		} else if key == "id" {
-			filter[key] = value
 		}
 	}
 

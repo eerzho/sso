@@ -1,4 +1,4 @@
-.PHONY: build up down logs restart
+.PHONY: build up down logs restart swagger
 
 build:
 	docker compose build
@@ -9,6 +9,7 @@ ifdef name
 else 
 	docker compose up -d
 endif
+	$(MAKE) swagger
 
 down:
 ifdef name
@@ -32,3 +33,6 @@ else
 	$(MAKE) down
 	$(MAKE) up
 endif
+
+swagger:
+	docker compose exec http swag init -g ./internal/handler/handler.go
