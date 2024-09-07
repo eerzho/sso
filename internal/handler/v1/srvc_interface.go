@@ -18,5 +18,6 @@ type (
 	AuthSrvc interface {
 		Login(ctx context.Context, email, password, ip string) (*dto.Token, error)
 		DecodeAToken(ctx context.Context, aToken string) (*dto.Claims, error)
+		Refresh(ctx context.Context, aToken, rToken, ip string) (*dto.Token, error)
 	}
 )

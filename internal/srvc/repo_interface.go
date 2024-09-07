@@ -20,5 +20,6 @@ type (
 	RefreshTokenRepo interface {
 		DeleteByUser(ctx context.Context, user *model.User) error
 		Create(ctx context.Context, refreshToken *model.RefreshToken) error
+		GetByUserAndID(ctx context.Context, user *model.User, id string) (*model.RefreshToken, error)
 	}
 )

@@ -2,6 +2,7 @@ package mwr
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sso/internal/def"
@@ -50,12 +51,15 @@ func (a *Auth) MwrFunc(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if claims.ExpiresAt.Time.Before(time.Now()) {
-			a.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, def.ErrTokenExpired))
+			a.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, def.ErrATokenExpired))
 			return
 		}
 
 		user, err := a.userSrvc.GetByID(r.Context(), claims.UserID.Hex())
 		if err != nil {
+			if errors.Is(err, def.ErrNotFound) {
+				a.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, def.ErrCannotLogin))
+			}
 			a.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 			return
 		}

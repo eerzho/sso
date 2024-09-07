@@ -49,8 +49,15 @@ func (b *Builder) JsonFail(w http.ResponseWriter, r *http.Request, err error) {
 		errors.Is(err, def.ErrAuthMissing) ||
 		errors.Is(err, def.ErrInvalidAuthFormat) ||
 		errors.Is(err, def.ErrInvalidSigningMethod) ||
-		errors.Is(err, def.ErrInvalidClaimsType) {
+		errors.Is(err, def.ErrInvalidClaimsType) ||
+		errors.Is(err, def.ErrATokenExpired) ||
+		errors.Is(err, def.ErrInvalidUserType) ||
+		errors.Is(err, def.ErrTokensMismatch) ||
+		errors.Is(err, def.ErrRTokenExpired) ||
+		errors.Is(err, def.ErrInvalidRToken) {
 		code = http.StatusUnauthorized
+	} else if errors.Is(err, def.ErrCannotLogin) {
+		code = http.StatusForbidden
 	}
 
 	b.logFail(r, code, err)

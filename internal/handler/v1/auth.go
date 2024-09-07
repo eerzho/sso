@@ -31,6 +31,7 @@ func newAuth(
 
 	mux.HandleFunc("POST "+prefix, a.login)
 	mux.HandleFunc("GET "+prefix, authMwr.MwrFunc(a.me))
+	mux.HandleFunc("POST "+prefix+"/refresh", a.refresh)
 }
 
 func (a *auth) login(w http.ResponseWriter, r *http.Request) {
@@ -62,4 +63,23 @@ func (a *auth) me(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.rb.JsonSuccess(w, r, http.StatusOK, user)
+}
+
+func (a *auth) refresh(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.auth.refresh"
+
+	var req request.Refresh
+	err := a.rp.ParseBody(r, &req)
+	if err != nil {
+		a.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
+		return
+	}
+
+	token, err := a.authSrvc.Refresh(r.Context(), req.AToken, req.RToken, a.rp.GetHeaderIP(r))
+	if err != nil {
+		a.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
+		return
+	}
+
+	a.rb.JsonSuccess(w, r, http.StatusOK, token)
 }

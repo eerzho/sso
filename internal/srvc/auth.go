@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"sso/internal/def"
 	"sso/internal/dto"
 	"sso/internal/model"
@@ -43,20 +44,12 @@ func (a *Auth) Login(ctx context.Context, email, password, ip string) (*dto.Toke
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	refreshToken, rToken, err := a.createRTokenByUser(ctx, user, ip)
+	token, err := a.createToken(ctx, user, ip)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	aToken, err := a.generateAToken(user, refreshToken, ip)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
-	return &dto.Token{
-		AToken: aToken,
-		RToken: rToken,
-	}, nil
+	return token, nil
 }
 
 func (a *Auth) DecodeAToken(ctx context.Context, aToken string) (*dto.Claims, error) {
@@ -73,6 +66,40 @@ func (a *Auth) DecodeAToken(ctx context.Context, aToken string) (*dto.Claims, er
 	}
 
 	return claims, nil
+}
+
+func (a *Auth) Refresh(ctx context.Context, aToken, rToken, ip string) (*dto.Token, error) {
+	const op = "srvc.Auth.Refresh"
+
+	claims, err := a.DecodeAToken(ctx, aToken)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	user, err := a.userSrvc.GetByID(ctx, claims.UserID.Hex())
+	if err != nil {
+		if errors.Is(err, def.ErrNotFound) {
+			return nil, fmt.Errorf("%s: %w", op, def.ErrCannotLogin)
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if claims.IP != ip {
+		// TODO: send email
+		log.Printf("sending email to %s", user.Email)
+	}
+
+	err = a.validateRToken(ctx, user, claims.RefreshTokenID.Hex(), rToken)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	token, err := a.createToken(ctx, user, ip)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return token, nil
 }
 
 func (a *Auth) validateCredential(ctx context.Context, email, password string) (*model.User, error) {
@@ -111,7 +138,8 @@ func (a *Auth) createRTokenByUser(ctx context.Context, user *model.User, ip stri
 		return nil, "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	hash, err := bcrypt.GenerateFromPassword(random, bcrypt.DefaultCost)
+	rToken := base64.StdEncoding.EncodeToString(random)
+	hash, err := bcrypt.GenerateFromPassword([]byte(rToken), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, "", fmt.Errorf("%s: %w", op, err)
 	}
@@ -127,7 +155,7 @@ func (a *Auth) createRTokenByUser(ctx context.Context, user *model.User, ip stri
 		return nil, "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	return refreshToken, base64.StdEncoding.EncodeToString(random), nil
+	return refreshToken, rToken, nil
 }
 
 func (a *Auth) generateAToken(user *model.User, refreshToken *model.RefreshToken, ip string) (string, error) {
@@ -160,4 +188,49 @@ func (a *Auth) getSigningKey(token *jwt.Token) (interface{}, error) {
 	}
 
 	return a.jwtSecret, nil
+}
+
+func (a *Auth) validateRToken(ctx context.Context, user *model.User, refreshTokenID, rToken string) error {
+	const op = "srvc.Auth.validateRToken"
+
+	refreshToken, err := a.refreshTokenSrvc.GetByUserAndID(ctx, user, refreshTokenID)
+	if err != nil {
+		if errors.Is(err, def.ErrNotFound) {
+			return fmt.Errorf("%s: %w", op, def.ErrTokensMismatch)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if time.Now().After(refreshToken.ExpiresAt) {
+		return fmt.Errorf("%s: %w", op, def.ErrRTokenExpired)
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(refreshToken.Hash), []byte(rToken))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return fmt.Errorf("%s: %w", op, def.ErrInvalidRToken)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (a *Auth) createToken(ctx context.Context, user *model.User, ip string) (*dto.Token, error) {
+	const op = "srvc.Auth.createToken"
+
+	refreshToken, rToken, err := a.createRTokenByUser(ctx, user, ip)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	aToken, err := a.generateAToken(user, refreshToken, ip)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &dto.Token{
+		AToken: aToken,
+		RToken: rToken,
+	}, nil
 }

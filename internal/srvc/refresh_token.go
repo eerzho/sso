@@ -44,3 +44,14 @@ func (r *RefreshToken) CreateByUser(ctx context.Context, user *model.User, ip, h
 
 	return &refreshToken, nil
 }
+
+func (r *RefreshToken) GetByUserAndID(ctx context.Context, user *model.User, id string) (*model.RefreshToken, error) {
+	const op = "srvc.RefreshToken.GetByUserAndID"
+
+	refreshToken, err := r.refreshTokenRepo.GetByUserAndID(ctx, user, id)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return refreshToken, nil
+}

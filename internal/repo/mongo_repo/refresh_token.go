@@ -2,6 +2,7 @@ package mongo_repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sso/internal/def"
 	"sso/internal/model"
@@ -51,4 +52,29 @@ func (r *RefreshToken) Create(ctx context.Context, refreshToken *model.RefreshTo
 	}
 
 	return nil
+}
+
+func (r *RefreshToken) GetByUserAndID(ctx context.Context, user *model.User, id string) (*model.RefreshToken, error) {
+	const op = "mongo_repo.RefreshToken.GetByUserAndID"
+
+	idObj, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{
+		"_id":     idObj,
+		"user_id": user.ID,
+	}
+
+	var refreshToken model.RefreshToken
+	err = r.collection.FindOne(ctx, filter).Decode(&refreshToken)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("%s: %w", op, def.ErrNotFound)
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &refreshToken, nil
 }
