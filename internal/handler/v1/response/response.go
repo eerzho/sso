@@ -45,7 +45,11 @@ func (b *Builder) JsonFail(w http.ResponseWriter, r *http.Request, err error) {
 	} else if errors.Is(err, def.ErrAlreadyExists) ||
 		errors.Is(err, def.ErrInvalidBody) {
 		code = http.StatusBadRequest
-	} else if errors.Is(err, def.ErrInvalidCredentials) {
+	} else if errors.Is(err, def.ErrInvalidCredentials) ||
+		errors.Is(err, def.ErrAuthMissing) ||
+		errors.Is(err, def.ErrInvalidAuthFormat) ||
+		errors.Is(err, def.ErrInvalidSigningMethod) ||
+		errors.Is(err, def.ErrInvalidClaimsType) {
 		code = http.StatusUnauthorized
 	}
 

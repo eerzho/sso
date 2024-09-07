@@ -18,8 +18,10 @@ func New(
 	rp := request.NewParser()
 	rb := response.NewBuilder(lg)
 
-	newUser(mux, prefix, rp, rb, userSrvc)
-	newAuth(mux, prefix, rp, rb, authSrvc)
+	authMwr := mwr.NewAuth(rb, authSrvc, userSrvc)
+
+	newUser(mux, prefix, rp, rb, authMwr, userSrvc)
+	newAuth(mux, prefix, rp, rb, authMwr, authSrvc)
 
 	reqIDMwr := mwr.NewRequestId()
 	reqLgMwr := mwr.NewRequestLogger(lg)

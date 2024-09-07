@@ -59,6 +59,22 @@ func (a *Auth) Login(ctx context.Context, email, password, ip string) (*dto.Toke
 	}, nil
 }
 
+func (a *Auth) DecodeAToken(ctx context.Context, aToken string) (*dto.Claims, error) {
+	const op = "srvc.Auth.DecodeAToken"
+
+	token, err := jwt.ParseWithClaims(aToken, &dto.Claims{}, a.getSigningKey)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	claims, ok := token.Claims.(*dto.Claims)
+	if !ok {
+		return nil, fmt.Errorf("%s: %w", op, def.ErrInvalidClaimsType)
+	}
+
+	return claims, nil
+}
+
 func (a *Auth) validateCredential(ctx context.Context, email, password string) (*model.User, error) {
 	const op = "srvc.Auth.validateCredential"
 
@@ -133,4 +149,15 @@ func (a *Auth) generateAToken(user *model.User, refreshToken *model.RefreshToken
 	}
 
 	return token, nil
+}
+
+func (a *Auth) getSigningKey(token *jwt.Token) (interface{}, error) {
+	const op = "srv.Auth.getSigningKey"
+
+	_, ok := token.Method.(*jwt.SigningMethodHMAC)
+	if !ok {
+		return nil, fmt.Errorf("%s: %w", op, def.ErrInvalidSigningMethod)
+	}
+
+	return a.jwtSecret, nil
 }

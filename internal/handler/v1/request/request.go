@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"sso/internal/def"
+	"sso/internal/model"
 	"strconv"
 	"strings"
 
@@ -93,4 +94,13 @@ func (p *Parser) GetHeaderIP(r *http.Request) string {
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 
 	return ip
+}
+
+func (p *Parser) GetAuthUser(r *http.Request) (*model.User, error) {
+	user, ok := r.Context().Value(def.ContextAuthUser).(*model.User)
+	if !ok {
+		return nil, def.ErrInvalidUserType
+	}
+
+	return user, nil
 }

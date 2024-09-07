@@ -3,6 +3,7 @@ package v1
 import (
 	"fmt"
 	"net/http"
+	"sso/internal/handler/v1/mwr"
 	"sso/internal/handler/v1/request"
 	"sso/internal/handler/v1/response"
 )
@@ -18,6 +19,7 @@ func newUser(
 	prefix string,
 	rp *request.Parser,
 	rb *response.Builder,
+	authMwr *mwr.Auth,
 	userSrvc UserSrvc,
 ) {
 	prefix += "/users"
@@ -27,11 +29,11 @@ func newUser(
 		userSrvc: userSrvc,
 	}
 
-	mux.HandleFunc("GET "+prefix, u.list)
+	mux.HandleFunc("GET "+prefix, authMwr.MwrFunc(u.list))
 	mux.HandleFunc("POST "+prefix, u.create)
-	mux.HandleFunc("GET "+prefix+"/{id}", u.show)
-	mux.HandleFunc("PATCH "+prefix+"/{id}", u.update)
-	mux.HandleFunc("DELETE "+prefix+"/{id}", u.delete)
+	mux.HandleFunc("GET "+prefix+"/{id}", authMwr.MwrFunc(u.show))
+	mux.HandleFunc("PATCH "+prefix+"/{id}", authMwr.MwrFunc(u.update))
+	mux.HandleFunc("DELETE "+prefix+"/{id}", authMwr.MwrFunc(u.delete))
 }
 
 func (u *user) list(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +85,7 @@ func (u *user) show(w http.ResponseWriter, r *http.Request) {
 
 	id := r.PathValue("id")
 
-	user, err := u.userSrvc.Show(r.Context(), id)
+	user, err := u.userSrvc.GetByID(r.Context(), id)
 	if err != nil {
 		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return

@@ -61,8 +61,8 @@ func (u *User) Create(ctx context.Context, email, name, password string) (*model
 	return &user, nil
 }
 
-func (u *User) Show(ctx context.Context, id string) (*model.User, error) {
-	const op = "srvc.User.Show"
+func (u *User) GetByID(ctx context.Context, id string) (*model.User, error) {
+	const op = "srvc.User.GetByID"
 
 	user, err := u.userRepo.GetByID(ctx, id)
 	if err != nil {
