@@ -2,6 +2,8 @@ package request
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net"
 	"net/http"
 	"sso/internal/def"
@@ -26,6 +28,9 @@ func (p *Parser) ParseBody(r *http.Request, req interface{}) error {
 
 	err := decoder.Decode(req)
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return def.ErrInvalidBody
+		}
 		return err
 	}
 
@@ -86,6 +91,6 @@ func (p *Parser) GetHeaderIP(r *http.Request) string {
 	}
 
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-	
+
 	return ip
 }

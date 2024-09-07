@@ -42,9 +42,10 @@ func (b *Builder) JsonFail(w http.ResponseWriter, r *http.Request, err error) {
 	code := http.StatusInternalServerError
 	if errors.Is(err, def.ErrNotFound) {
 		code = http.StatusNotFound
-	} else if errors.Is(err, def.ErrAlreadyExists) {
+	} else if errors.Is(err, def.ErrAlreadyExists) ||
+		errors.Is(err, def.ErrInvalidBody) {
 		code = http.StatusBadRequest
-	} else if errors.Is(err, def.ErrInvalidCredential) {
+	} else if errors.Is(err, def.ErrInvalidCredentials) {
 		code = http.StatusUnauthorized
 	}
 

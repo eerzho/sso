@@ -65,7 +65,7 @@ func (a *Auth) validateCredential(ctx context.Context, email, password string) (
 	user, err := a.userSrvc.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, def.ErrNotFound) {
-			return nil, fmt.Errorf("%s: %w", op, def.ErrInvalidCredential)
+			return nil, fmt.Errorf("%s: %w", op, def.ErrInvalidCredentials)
 		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -73,7 +73,7 @@ func (a *Auth) validateCredential(ctx context.Context, email, password string) (
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return nil, fmt.Errorf("%s: %w", op, def.ErrInvalidCredential)
+			return nil, fmt.Errorf("%s: %w", op, def.ErrInvalidCredentials)
 		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

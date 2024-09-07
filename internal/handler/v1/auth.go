@@ -31,7 +31,7 @@ func newAuth(
 }
 
 func (a *auth) login(w http.ResponseWriter, r *http.Request) {
-	const op = "v1.auth.auth"
+	const op = "v1.auth.login"
 
 	var req request.Login
 	err := a.rp.ParseBody(r, &req)
