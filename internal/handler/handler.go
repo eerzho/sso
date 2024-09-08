@@ -25,10 +25,10 @@ func New(app *app.App) http.Handler {
 	roleRepo := mongo_repo.NewRole(app.Mng)
 
 	// srvc
-	userSrvc := srvc.NewUser(userRepo)
+	roleSrvc := srvc.NewRole(roleRepo)
+	userSrvc := srvc.NewUser(userRepo, roleSrvc)
 	refreshTokenSrvc := srvc.NewRefreshToken(refreshTokenRepo)
 	authSrvc := srvc.NewAuth(app.Cfg.JWT.Secret, userSrvc, refreshTokenSrvc)
-	roleSrvc := srvc.NewRole(roleRepo)
 
 	// handler
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)

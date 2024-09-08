@@ -7,16 +7,22 @@ import (
 	"sso/internal/dto"
 	"sso/internal/model"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
 	userRepo UserRepo
+	roleSrvc RoleSrvc
 }
 
-func NewUser(userRepo UserRepo) *User {
+func NewUser(
+	userRepo UserRepo,
+	roleSrvc RoleSrvc,
+) *User {
 	return &User{
 		userRepo: userRepo,
+		roleSrvc: roleSrvc,
 	}
 }
 
@@ -51,6 +57,7 @@ func (u *User) Create(ctx context.Context, email, name, password string) (*model
 		Email:    email,
 		Name:     name,
 		Password: string(passwordHash),
+		RoleIDs:  []primitive.ObjectID{},
 	}
 
 	err = u.userRepo.Create(ctx, &user)
@@ -72,7 +79,7 @@ func (u *User) GetByID(ctx context.Context, id string) (*model.User, error) {
 	return user, nil
 }
 
-func (u *User) Update(ctx context.Context, id, name string) (*model.User, error) {
+func (u *User) Update(ctx context.Context, id, name string, roleIDs []string) (*model.User, error) {
 	const op = "srvc.User.Update"
 
 	user, err := u.userRepo.GetByID(ctx, id)
@@ -80,7 +87,16 @@ func (u *User) Update(ctx context.Context, id, name string) (*model.User, error)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
+	roles, err := u.roleSrvc.GetByIDs(ctx, roleIDs)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
 	user.Name = name
+	user.RoleIDs = []primitive.ObjectID{}
+	for _, role := range roles {
+		user.RoleIDs = append(user.RoleIDs, role.ID)
+	}
 
 	err = u.userRepo.Update(ctx, user)
 	if err != nil {

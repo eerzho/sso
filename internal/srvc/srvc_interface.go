@@ -17,4 +17,8 @@ type (
 		CreateByUser(ctx context.Context, user *model.User, ip, hash string, expiresAt time.Time) (*model.RefreshToken, error)
 		GetByUserAndID(ctx context.Context, user *model.User, id string) (*model.RefreshToken, error)
 	}
+
+	RoleSrvc interface {
+		GetByIDs(ctx context.Context, ids []string) ([]model.Role, error)
+	}
 )

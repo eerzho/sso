@@ -133,6 +133,7 @@ func (u *User) Update(ctx context.Context, user *model.User) error {
 			"name":       user.Name,
 			"email":      user.Email,
 			"updated_at": user.UpdatedAt,
+			"role_ids":   user.RoleIDs,
 		},
 	}
 

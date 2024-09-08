@@ -118,7 +118,7 @@ func (u *user) show(w http.ResponseWriter, r *http.Request) {
 	u.rb.JsonSuccess(w, r, http.StatusOK, user)
 }
 
-// @Summary update profile
+// @Summary update user data
 // @Tags users
 // @Security BearerAuth
 // @Router /v1/users/{id} [patch]
@@ -139,7 +139,7 @@ func (u *user) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.userSrvc.Update(r.Context(), id, req.Name)
+	user, err := u.userSrvc.Update(r.Context(), id, req.Name, req.RoleIDs)
 	if err != nil {
 		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return

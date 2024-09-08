@@ -580,7 +580,7 @@ const docTemplate = `{
                 "tags": [
                     "users"
                 ],
-                "summary": "update profile",
+                "summary": "update user data",
                 "parameters": [
                     {
                         "type": "string",
@@ -683,6 +683,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -755,12 +761,19 @@ const docTemplate = `{
         "request.UserUpdate": {
             "type": "object",
             "required": [
-                "name"
+                "name",
+                "role_ids"
             ],
             "properties": {
                 "name": {
                     "type": "string",
                     "maxLength": 50
+                },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

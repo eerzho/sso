@@ -69,7 +69,6 @@ func (r *Role) List(ctx context.Context, page, count int, filters, sorts map[str
 	defer cursor.Close(ctx)
 
 	roles := []model.Role{}
-
 	err = cursor.All(ctx, &roles)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s: %w", op, err)
@@ -159,4 +158,32 @@ func (r *Role) Delete(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (r *Role) GetByIDs(ctx context.Context, ids []string) ([]model.Role, error) {
+	const op = "mongo_repo.Role.GetByIDs"
+
+	objectIDs := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err == nil {
+			objectIDs = append(objectIDs, objectID)
+		}
+	}
+
+	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer cursor.Close(ctx)
+
+	roles := []model.Role{}
+	err = cursor.All(ctx, &roles)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return roles, nil
 }
