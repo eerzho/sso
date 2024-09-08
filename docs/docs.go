@@ -580,7 +580,7 @@ const docTemplate = `{
                 "tags": [
                     "users"
                 ],
-                "summary": "update user data",
+                "summary": "update profile",
                 "parameters": [
                     {
                         "type": "string",
@@ -597,6 +597,102 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/request.UserUpdate"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/{id}/roles/{roleID}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "add role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "role id",
+                        "name": "roleID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.success"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "remove role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "role id",
+                        "name": "roleID",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -761,19 +857,12 @@ const docTemplate = `{
         "request.UserUpdate": {
             "type": "object",
             "required": [
-                "name",
-                "role_ids"
+                "name"
             ],
             "properties": {
                 "name": {
                     "type": "string",
                     "maxLength": 50
-                },
-                "role_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },

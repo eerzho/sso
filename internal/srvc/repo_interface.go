@@ -29,6 +29,5 @@ type (
 		IsExistsSlug(ctx context.Context, slug string) (bool, error)
 		GetByID(ctx context.Context, id string) (*model.Role, error)
 		Delete(ctx context.Context, id string) error
-		GetByIDs(ctx context.Context, ids []string) ([]model.Role, error)
 	}
 )

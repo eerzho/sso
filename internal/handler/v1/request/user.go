@@ -9,6 +9,5 @@ type (
 
 	UserUpdate struct {
 		Name    string   `json:"name" validate:"required,max=50"`
-		RoleIDs []string `json:"role_ids" validate:"required,dive,mongodb"`
 	}
 )

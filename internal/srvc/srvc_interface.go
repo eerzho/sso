@@ -19,6 +19,6 @@ type (
 	}
 
 	RoleSrvc interface {
-		GetByIDs(ctx context.Context, ids []string) ([]model.Role, error)
+		GetByID(ctx context.Context, id string) (*model.Role, error)
 	}
 )

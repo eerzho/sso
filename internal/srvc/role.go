@@ -79,14 +79,3 @@ func (r *Role) Delete(ctx context.Context, id string) error {
 
 	return nil
 }
-
-func (r *Role) GetByIDs(ctx context.Context, ids []string) ([]model.Role, error) {
-	const op = "srvc.Role.GetByIDs"
-
-	roles, err := r.roleRepo.GetByIDs(ctx, ids)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
-	return roles, nil
-}

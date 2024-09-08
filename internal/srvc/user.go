@@ -7,7 +7,6 @@ import (
 	"sso/internal/dto"
 	"sso/internal/model"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -57,7 +56,6 @@ func (u *User) Create(ctx context.Context, email, name, password string) (*model
 		Email:    email,
 		Name:     name,
 		Password: string(passwordHash),
-		RoleIDs:  []primitive.ObjectID{},
 	}
 
 	err = u.userRepo.Create(ctx, &user)
@@ -79,7 +77,7 @@ func (u *User) GetByID(ctx context.Context, id string) (*model.User, error) {
 	return user, nil
 }
 
-func (u *User) Update(ctx context.Context, id, name string, roleIDs []string) (*model.User, error) {
+func (u *User) Update(ctx context.Context, id, name string) (*model.User, error) {
 	const op = "srvc.User.Update"
 
 	user, err := u.userRepo.GetByID(ctx, id)
@@ -87,17 +85,7 @@ func (u *User) Update(ctx context.Context, id, name string, roleIDs []string) (*
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	roles, err := u.roleSrvc.GetByIDs(ctx, roleIDs)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
 	user.Name = name
-	user.RoleIDs = []primitive.ObjectID{}
-	for _, role := range roles {
-		user.RoleIDs = append(user.RoleIDs, role.ID)
-	}
-
 	err = u.userRepo.Update(ctx, user)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -121,6 +109,72 @@ func (u *User) GetByEmail(ctx context.Context, email string) (*model.User, error
 	const op = "srvc.User.GetByEmail"
 
 	user, err := u.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
+func (u *User) AddRole(ctx context.Context, id, roleID string) (*model.User, error) {
+	const op = "srvc.User.AddRole"
+
+	user, err := u.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	role, err := u.roleSrvc.GetByID(ctx, roleID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	isUnique := true
+	for _, roleID := range user.RoleIDs {
+		if roleID == role.ID {
+			isUnique = false
+			break
+		}
+	}
+	if !isUnique {
+		return user, nil
+	}
+
+	user.RoleIDs = append(user.RoleIDs, role.ID)
+	err = u.userRepo.Update(ctx, user)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
+func (u *User) RemoveRole(ctx context.Context, id, roleID string) (*model.User, error) {
+	const op = "srvc.User.RemoveRole"
+
+	user, err := u.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	role, err := u.roleSrvc.GetByID(ctx, roleID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	existsIdx := -1
+	for index, roleID := range user.RoleIDs {
+		if roleID == role.ID {
+			existsIdx = index
+			break
+		}
+	}
+	if existsIdx == -1 {
+		return user, nil
+	}
+
+	user.RoleIDs = append(user.RoleIDs[:existsIdx], user.RoleIDs[existsIdx+1:]...)
+	err = u.userRepo.Update(ctx, user)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

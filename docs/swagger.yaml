@@ -95,13 +95,8 @@ definitions:
       name:
         maxLength: 50
         type: string
-      role_ids:
-        items:
-          type: string
-        type: array
     required:
     - name
-    - role_ids
     type: object
   response.list:
     properties:
@@ -470,7 +465,62 @@ paths:
               type: object
       security:
       - BearerAuth: []
-      summary: update user data
+      summary: update profile
+      tags:
+      - users
+  /v1/users/{id}/roles/{roleID}:
+    delete:
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: role id
+        in: path
+        name: roleID
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.success'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: remove role
+      tags:
+      - users
+    post:
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: role id
+        in: path
+        name: roleID
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.success'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: add role
       tags:
       - users
 securityDefinitions:

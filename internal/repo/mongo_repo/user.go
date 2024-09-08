@@ -63,8 +63,7 @@ func (u *User) List(ctx context.Context, page, count int, filters, sorts map[str
 	}
 	defer cursor.Close(ctx)
 
-	users := []model.User{}
-
+	var users []model.User
 	err = cursor.All(ctx, &users)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s: %w", op, err)

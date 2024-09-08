@@ -34,6 +34,8 @@ func newUser(
 	mux.HandleFunc("GET "+prefix+"/{id}", authMwr.MwrFunc(u.show))
 	mux.HandleFunc("PATCH "+prefix+"/{id}", authMwr.MwrFunc(u.update))
 	mux.HandleFunc("DELETE "+prefix+"/{id}", authMwr.MwrFunc(u.delete))
+	mux.HandleFunc("POST "+prefix+"/{id}/roles/{roleID}", authMwr.MwrFunc(u.addRole))
+	mux.HandleFunc("DELETE "+prefix+"/{id}/roles/{roleID}", authMwr.MwrFunc(u.removeRole))
 }
 
 // @Summary users list
@@ -118,7 +120,7 @@ func (u *user) show(w http.ResponseWriter, r *http.Request) {
 	u.rb.JsonSuccess(w, r, http.StatusOK, user)
 }
 
-// @Summary update user data
+// @Summary update profile
 // @Tags users
 // @Security BearerAuth
 // @Router /v1/users/{id} [patch]
@@ -139,7 +141,7 @@ func (u *user) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := u.userSrvc.Update(r.Context(), id, req.Name, req.RoleIDs)
+	user, err := u.userSrvc.Update(r.Context(), id, req.Name)
 	if err != nil {
 		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
@@ -166,4 +168,46 @@ func (u *user) delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.rb.JsonSuccess(w, r, http.StatusNoContent, nil)
+}
+
+// @Summary add role
+// @Tags users
+// @Security BearerAuth
+// @Router /v1/users/{id}/roles/{roleID} [post]
+// @Param id path string true "user id"
+// @Param roleID path string true "role id"
+// @Success 200 {object} response.success{data=model.User}
+func (u *user) addRole(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.user.addRole"
+
+	id := r.PathValue("id")
+	roleID := r.PathValue("roleID")
+	user, err := u.userSrvc.AddRole(r.Context(), id, roleID)
+	if err != nil {
+		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
+		return
+	}
+
+	u.rb.JsonSuccess(w, r, http.StatusOK, user)
+}
+
+// @Summary remove role
+// @Tags users
+// @Security BearerAuth
+// @Router /v1/users/{id}/roles/{roleID} [delete]
+// @Param id path string true "user id"
+// @Param roleID path string true "role id"
+// @Success 200 {object} response.success{data=model.User}
+func (u *user) removeRole(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.user.removeRole"
+
+	id := r.PathValue("id")
+	roleID := r.PathValue("roleID")
+	user, err := u.userSrvc.RemoveRole(r.Context(), id, roleID)
+	if err != nil {
+		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
+		return
+	}
+
+	u.rb.JsonSuccess(w, r, http.StatusOK, user)
 }
