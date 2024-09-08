@@ -91,7 +91,7 @@ func (u *User) Create(ctx context.Context, user *model.User) error {
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 
-	_, err := u.collection.InsertOne(ctx, user)
+	_, err := u.collection.InsertOne(ctx, &user)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

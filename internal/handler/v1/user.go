@@ -52,7 +52,6 @@ func (u *user) list(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.user.list"
 
 	search := u.rp.GetQuerySearch(r)
-
 	users, pagination, err := u.userSrvc.List(
 		r.Context(),
 		search.Pagination.Page,
@@ -110,7 +109,6 @@ func (u *user) show(w http.ResponseWriter, r *http.Request) {
 	const op = "v1.user.show"
 
 	id := r.PathValue("id")
-
 	user, err := u.userSrvc.GetByID(r.Context(), id)
 	if err != nil {
 		u.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))

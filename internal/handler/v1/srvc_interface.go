@@ -20,4 +20,11 @@ type (
 		DecodeAToken(ctx context.Context, aToken string) (*dto.Claims, error)
 		Refresh(ctx context.Context, aToken, rToken, ip string) (*dto.Token, error)
 	}
+
+	RoleSrvc interface {
+		List(ctx context.Context, page, count int, filters, sorts map[string]string) ([]model.Role, *dto.Pagination, error)
+		Create(ctx context.Context, name string) (*model.Role, error)
+		GetByID(ctx context.Context, id string) (*model.Role, error)
+		Delete(ctx context.Context, id string) error
+	}
 )
