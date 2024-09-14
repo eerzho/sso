@@ -15,6 +15,7 @@ func New(
 	userSrvc UserSrvc,
 	authSrvc AuthSrvc,
 	roleSrvc RoleSrvc,
+	permissionSrvc PermissionSrvc,
 ) http.Handler {
 	rp := request.NewParser()
 	rb := response.NewBuilder(app.Cfg.IsDebug, app.Lg)
@@ -23,7 +24,8 @@ func New(
 
 	newUser(mux, prefix, rp, rb, authMwr, userSrvc)
 	newAuth(mux, prefix, rp, rb, authMwr, authSrvc)
-	NewRole(mux, prefix, rp, rb, authMwr, roleSrvc)
+	newRole(mux, prefix, rp, rb, authMwr, roleSrvc)
+	newPermission(mux, prefix, rp, rb, authMwr, permissionSrvc)
 
 	reqIDMwr := mwr.NewRequestId()
 	reqLgMwr := mwr.NewRequestLogger(app.Lg)

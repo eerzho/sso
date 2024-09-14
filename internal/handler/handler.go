@@ -23,17 +23,27 @@ func New(app *app.App) http.Handler {
 	userRepo := mongo_repo.NewUser(app.Mng)
 	refreshTokenRepo := mongo_repo.NewRefreshToken(app.Mng)
 	roleRepo := mongo_repo.NewRole(app.Mng)
+	permissionRepo := mongo_repo.NewPermission(app.Mng)
 
 	// srvc
 	roleSrvc := srvc.NewRole(roleRepo)
 	userSrvc := srvc.NewUser(userRepo, roleSrvc)
 	refreshTokenSrvc := srvc.NewRefreshToken(refreshTokenRepo)
 	authSrvc := srvc.NewAuth(app.Cfg.JWT.Secret, userSrvc, refreshTokenSrvc)
+	permissionSrvc := srvc.NewPermission(permissionRepo)
 
 	// handler
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	handler := v1.New(mux, app, "/api/v1", userSrvc, authSrvc, roleSrvc)
+	handler := v1.New(
+		mux, 
+		app, 
+		"/api/v1", 
+		userSrvc, 
+		authSrvc, 
+		roleSrvc,
+		permissionSrvc,
+	)
 
 	return handler
 }

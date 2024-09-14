@@ -8,25 +8,25 @@ import (
 	"sso/internal/handler/v1/response"
 )
 
-type role struct {
+type permission struct {
 	rp       *request.Parser
 	rb       *response.Builder
-	roleSrvc RoleSrvc
+	permissionSrvc PermissionSrvc
 }
 
-func newRole(
+func newPermission(
 	mux *http.ServeMux,
 	prefix string,
 	rp *request.Parser,
 	rb *response.Builder,
 	authMwr *mwr.Auth,
-	roleSrvc RoleSrvc,
+	permissionSrvc PermissionSrvc,
 ) {
-	prefix += "/roles"
-	re := role{
+	prefix += "/permissions"
+	re := permission{
 		rp:       rp,
 		rb:       rb,
-		roleSrvc: roleSrvc,
+		permissionSrvc: permissionSrvc,
 	}
 
 	mux.HandleFunc("GET "+prefix, authMwr.MwrFunc(re.list))
@@ -35,10 +35,10 @@ func newRole(
 	mux.HandleFunc("DELETE "+prefix+"/{id}", authMwr.MwrFunc(re.delete))
 }
 
-// @Summary roles list
-// @Tags roles
+// @Summary permissions list
+// @Tags permissions
 // @Security BearerAuth
-// @Router /v1/roles [get]
+// @Router /v1/permissions [get]
 // @Param pagination[page] query int false "page"
 // @Param pagination[count] query int false "count"
 // @Param sorts[created_at] query string false "created_at" Enums(asc, desc)
@@ -48,12 +48,12 @@ func newRole(
 // @Param filters[name] query string false "name"
 // @Param filters[slug] query string false "slug"
 // @Produce json
-// @Success 200 {object} response.list{data=[]model.Role,pagination=dto.Pagination}
-func (re *role) list(w http.ResponseWriter, r *http.Request) {
-	const op = "v1.role.list"
+// @Success 200 {object} response.list{data=[]model.Permission,pagination=dto.Pagination}
+func (re *permission) list(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.permission.list"
 
 	search := re.rp.GetQuerySearch(r)
-	roles, pagination, err := re.roleSrvc.List(
+	permissions, pagination, err := re.permissionSrvc.List(
 		r.Context(),
 		search.Pagination.Page,
 		search.Pagination.Count,
@@ -65,67 +65,67 @@ func (re *role) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	re.rb.JsonList(w, r, roles, pagination)
+	re.rb.JsonList(w, r, permissions, pagination)
 }
 
-// @Summary create role
-// @Tags roles
+// @Summary create permission
+// @Tags permissions
 // @Security BearerAuth
-// @Router /v1/roles [post]
+// @Router /v1/permissions [post]
 // @Accept json
-// @Param body body request.RoleCreate true "role create request"
+// @Param body body request.PermissionCreate true "permission create request"
 // @Produce json
-// @Success 201 {object} response.success{data=model.Role}
-func (re *role) create(w http.ResponseWriter, r *http.Request) {
-	const op = "v1.role.create"
+// @Success 201 {object} response.success{data=model.Permission}
+func (re *permission) create(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.permission.create"
 
-	var req request.RoleCreate
+	var req request.PermissionCreate
 	err := re.rp.ParseBody(r, &req)
 	if err != nil {
 		re.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
-	role, err := re.roleSrvc.Create(r.Context(), req.Name)
+	permission, err := re.permissionSrvc.Create(r.Context(), req.Name)
 	if err != nil {
 		re.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
-	re.rb.JsonSuccess(w, r, http.StatusCreated, role)
+	re.rb.JsonSuccess(w, r, http.StatusCreated, permission)
 }
 
-// @Summary get role by id
-// @Tags roles
+// @Summary get permission by id
+// @Tags permissions
 // @Security BearerAuth
-// @Router /v1/roles/{id} [get]
-// @Param id path string true "role id"
+// @Router /v1/permissions/{id} [get]
+// @Param id path string true "permission id"
 // @Produce json
-// @Success 200 {object} response.success{data=model.Role}
-func (re *role) show(w http.ResponseWriter, r *http.Request) {
-	const op = "v1.role.show"
+// @Success 200 {object} response.success{data=model.Permission}
+func (re *permission) show(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.permission.show"
 
 	id := r.PathValue("id")
-	role, err := re.roleSrvc.GetByID(r.Context(), id)
+	permission, err := re.permissionSrvc.GetByID(r.Context(), id)
 	if err != nil {
 		re.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return
 	}
 
-	re.rb.JsonSuccess(w, r, http.StatusOK, role)
+	re.rb.JsonSuccess(w, r, http.StatusOK, permission)
 }
 
-// @Summary delete role by id
-// @Tags roles
+// @Summary delete permission by id
+// @Tags permissions
 // @Security BearerAuth
-// @Router /v1/roles/{id} [delete]
-// @Param id path string true "role id"
+// @Router /v1/permissions/{id} [delete]
+// @Param id path string true "permission id"
 // @Success 204
-func (re *role) delete(w http.ResponseWriter, r *http.Request) {
-	const op = "v1.role.delete"
+func (re *permission) delete(w http.ResponseWriter, r *http.Request) {
+	const op = "v1.permission.delete"
 
 	id := r.PathValue("id")
-	err := re.roleSrvc.Delete(r.Context(), id)
+	err := re.permissionSrvc.Delete(r.Context(), id)
 	if err != nil {
 		re.rb.JsonFail(w, r, fmt.Errorf("%s: %w", op, err))
 		return

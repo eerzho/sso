@@ -30,4 +30,12 @@ type (
 		GetByID(ctx context.Context, id string) (*model.Role, error)
 		Delete(ctx context.Context, id string) error
 	}
+
+	PermissionRepo interface {
+		List(ctx context.Context, page, count int, filters, sorts map[string]string) ([]model.Permission, *dto.Pagination, error)
+		Create(ctx context.Context, role *model.Permission) error
+		IsExistsSlug(ctx context.Context, slug string) (bool, error)
+		GetByID(ctx context.Context, id string) (*model.Permission, error)
+		Delete(ctx context.Context, id string) error
+	}
 )
