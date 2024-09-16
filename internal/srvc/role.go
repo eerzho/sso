@@ -3,7 +3,6 @@ package srvc
 import (
 	"context"
 	"fmt"
-	"sso/internal/def"
 	"sso/internal/dto"
 	"sso/internal/model"
 
@@ -11,14 +10,17 @@ import (
 )
 
 type Role struct {
-	roleRepo RoleRepo
+	roleRepo       RoleRepo
+	permissionSrvc PermissionSrvc
 }
 
 func NewRole(
 	roleRepo RoleRepo,
+	permissionSrvc PermissionSrvc,
 ) *Role {
 	return &Role{
-		roleRepo: roleRepo,
+		roleRepo:       roleRepo,
+		permissionSrvc: permissionSrvc,
 	}
 }
 
@@ -37,12 +39,12 @@ func (r *Role) Create(ctx context.Context, name string) (*model.Role, error) {
 	const op = "srvc.Role.Create"
 
 	slug := slug.Make(name)
-	exists, err := r.roleRepo.IsExistsSlug(ctx, slug)
+	count, err := r.roleRepo.CountBySlug(ctx, slug)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	if exists {
-		return nil, fmt.Errorf("%s: %w", op, def.ErrAlreadyExists)
+	if count > 0 {
+		slug = fmt.Sprintf("%s-%d", slug, count+1)
 	}
 
 	role := model.Role{
@@ -78,4 +80,87 @@ func (r *Role) Delete(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (r *Role) AddPermission(ctx context.Context, id, permissionID string) (*model.Role, error) {
+	const op = "srvc.Role.AddPermission"
+
+	role, err := r.roleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	permission, err := r.permissionSrvc.GetByID(ctx, permissionID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	isUnique := true
+	for _, permissionID := range role.PermissionIDs {
+		if permissionID == permission.ID {
+			isUnique = false
+			break
+		}
+	}
+	if !isUnique {
+		return role, nil
+	}
+
+	role.PermissionIDs = append(role.PermissionIDs, permission.ID)
+	err = r.roleRepo.Update(ctx, role)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return role, nil
+}
+
+func (r *Role) RemovePermission(ctx context.Context, id, permissionID string) (*model.Role, error) {
+	const op = "srvc.Role.RemovePermission"
+
+	role, err := r.roleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	permission, err := r.permissionSrvc.GetByID(ctx, permissionID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	existsIdx := -1
+	for index, permissionID := range role.PermissionIDs {
+		if permissionID == permission.ID {
+			existsIdx = index
+			break
+		}
+	}
+	if existsIdx == -1 {
+		return role, nil
+	}
+
+	role.PermissionIDs = append(role.PermissionIDs[:existsIdx], role.PermissionIDs[existsIdx+1:]...)
+	err = r.roleRepo.Update(ctx, role)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return role, nil
+}
+
+func (r *Role) Update(ctx context.Context, id, name string) (*model.Role, error) {
+	const op = "srvc.Role.Update"
+
+	role, err := r.roleRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	role.Name = name
+	err = r.roleRepo.Update(ctx, role)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return role, nil
 }

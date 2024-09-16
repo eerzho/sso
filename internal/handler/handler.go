@@ -26,11 +26,11 @@ func New(app *app.App) http.Handler {
 	permissionRepo := mongo_repo.NewPermission(app.Mng)
 
 	// srvc
-	roleSrvc := srvc.NewRole(roleRepo)
+	permissionSrvc := srvc.NewPermission(permissionRepo)
+	roleSrvc := srvc.NewRole(roleRepo, permissionSrvc)
 	userSrvc := srvc.NewUser(userRepo, roleSrvc)
 	refreshTokenSrvc := srvc.NewRefreshToken(refreshTokenRepo)
 	authSrvc := srvc.NewAuth(app.Cfg.JWT.Secret, userSrvc, refreshTokenSrvc)
-	permissionSrvc := srvc.NewPermission(permissionRepo)
 
 	// handler
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)

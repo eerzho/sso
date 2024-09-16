@@ -126,7 +126,6 @@ func (u *User) Update(ctx context.Context, user *model.User) error {
 	user.UpdatedAt = time.Now()
 
 	filter := bson.M{"_id": user.ID}
-
 	update := bson.M{
 		"$set": bson.M{
 			"name":       user.Name,

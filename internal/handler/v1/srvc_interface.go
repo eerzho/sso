@@ -28,6 +28,9 @@ type (
 		Create(ctx context.Context, name string) (*model.Role, error)
 		GetByID(ctx context.Context, id string) (*model.Role, error)
 		Delete(ctx context.Context, id string) error
+		AddPermission(ctx context.Context, id, permissionID string) (*model.Role, error)
+		RemovePermission(ctx context.Context, id, permissionID string) (*model.Role, error)
+		Update(ctx context.Context, id, name string) (*model.Role, error)
 	}
 
 	PermissionSrvc interface {
@@ -35,5 +38,6 @@ type (
 		Create(ctx context.Context, name string) (*model.Permission, error)
 		GetByID(ctx context.Context, id string) (*model.Permission, error)
 		Delete(ctx context.Context, id string) error
+		Update(ctx context.Context, id, name string) (*model.Permission, error)
 	}
 )

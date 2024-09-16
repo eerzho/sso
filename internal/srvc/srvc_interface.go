@@ -21,4 +21,8 @@ type (
 	RoleSrvc interface {
 		GetByID(ctx context.Context, id string) (*model.Role, error)
 	}
+
+	PermissionSrvc interface {
+		GetByID(ctx context.Context, id string) (*model.Permission, error)
+	}
 )

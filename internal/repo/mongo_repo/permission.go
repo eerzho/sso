@@ -27,11 +27,11 @@ func NewPermission(db *mongo.Database) *Permission {
 	}
 }
 
-func (r *Permission) List(ctx context.Context, page, count int, filters, sorts map[string]string) ([]model.Permission, *dto.Pagination, error) {
+func (p *Permission) List(ctx context.Context, page, count int, filters, sorts map[string]string) ([]model.Permission, *dto.Pagination, error) {
 	const op = "mongo_repo.Permission.List"
 
-	if count > r.maxListCount {
-		count = r.maxListCount
+	if count > p.maxListCount {
+		count = p.maxListCount
 	}
 
 	filter := bson.M{}
@@ -62,7 +62,7 @@ func (r *Permission) List(ctx context.Context, page, count int, filters, sorts m
 	findOptions.SetLimit(int64(count))
 	findOptions.SetSort(sort)
 
-	cursor, err := r.collection.Find(ctx, filter, findOptions)
+	cursor, err := p.collection.Find(ctx, filter, findOptions)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -74,7 +74,7 @@ func (r *Permission) List(ctx context.Context, page, count int, filters, sorts m
 		return nil, nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	total, err := r.collection.CountDocuments(ctx, filter)
+	total, err := p.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -88,14 +88,14 @@ func (r *Permission) List(ctx context.Context, page, count int, filters, sorts m
 	return permissions, &pagination, nil
 }
 
-func (r *Permission) Create(ctx context.Context, permission *model.Permission) error {
+func (p *Permission) Create(ctx context.Context, permission *model.Permission) error {
 	const op = "mongo_repo.Permission.Create"
 
 	permission.ID = primitive.NewObjectID()
 	permission.CreatedAt = time.Now()
 	permission.UpdatedAt = time.Now()
 
-	_, err := r.collection.InsertOne(ctx, &permission)
+	_, err := p.collection.InsertOne(ctx, &permission)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -103,20 +103,19 @@ func (r *Permission) Create(ctx context.Context, permission *model.Permission) e
 	return nil
 }
 
-func (r *Permission) IsExistsSlug(ctx context.Context, slug string) (bool, error) {
-	const op = "mongo_repo.Permission.IsExistsSlug"
+func (p *Permission) CountBySlug(ctx context.Context, slug string) (int, error) {
+	const op = "mongo_repo.Permission.CountBySlug"
 
-	filter := bson.M{"slug": slug}
-
-	count, err := r.collection.CountDocuments(ctx, filter)
+	filter := bson.M{"slug": bson.M{"$regex": slug, "$options": "i"}}
+	count, err := p.collection.CountDocuments(ctx, filter)
 	if err != nil {
-		return false, fmt.Errorf("%s: %w", op, err)
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return count > 0, nil
+	return int(count), nil
 }
 
-func (r *Permission) GetByID(ctx context.Context, id string) (*model.Permission, error) {
+func (p *Permission) GetByID(ctx context.Context, id string) (*model.Permission, error) {
 	const op = "mongo_repo.Permission.GetByID"
 
 	idObj, err := primitive.ObjectIDFromHex(id)
@@ -127,7 +126,7 @@ func (r *Permission) GetByID(ctx context.Context, id string) (*model.Permission,
 	filter := bson.M{"_id": idObj}
 	var permission model.Permission
 
-	err = r.collection.FindOne(ctx, filter).Decode(&permission)
+	err = p.collection.FindOne(ctx, filter).Decode(&permission)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, fmt.Errorf("%s: %w", op, def.ErrNotFound)
@@ -138,7 +137,7 @@ func (r *Permission) GetByID(ctx context.Context, id string) (*model.Permission,
 	return &permission, nil
 }
 
-func (r *Permission) Delete(ctx context.Context, id string) error {
+func (p *Permission) Delete(ctx context.Context, id string) error {
 	const op = "mongo_repo.Permission.Delete"
 
 	idObj, err := primitive.ObjectIDFromHex(id)
@@ -148,13 +147,38 @@ func (r *Permission) Delete(ctx context.Context, id string) error {
 
 	filter := bson.M{"_id": idObj}
 
-	result, err := r.collection.DeleteOne(ctx, filter)
+	result, err := p.collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	if result.DeletedCount == 0 {
 		return fmt.Errorf("%s: %w", op, def.ErrNotFound)
+	}
+
+	return nil
+}
+
+func (p *Permission) Update(ctx context.Context, permission *model.Permission) error {
+	const op = "mongo_repo.Permission.Update"
+
+	permission.UpdatedAt = time.Now()
+
+	filter := bson.M{"_id": permission.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"name":       permission.Name,
+			"updated_at": permission.UpdatedAt,
+		},
+	}
+
+	result, err := p.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil

@@ -103,17 +103,16 @@ func (r *Role) Create(ctx context.Context, role *model.Role) error {
 	return nil
 }
 
-func (r *Role) IsExistsSlug(ctx context.Context, slug string) (bool, error) {
-	const op = "mongo_repo.Role.IsExistsSlug"
+func (r *Role) CountBySlug(ctx context.Context, slug string) (int, error) {
+	const op = "mongo_repo.Role.CountBySlug"
 
-	filter := bson.M{"slug": slug}
-
+	filter := bson.M{"slug": bson.M{"$regex": slug, "$options": "i"}}
 	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
-		return false, fmt.Errorf("%s: %w", op, err)
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return count > 0, nil
+	return int(count), nil
 }
 
 func (r *Role) GetByID(ctx context.Context, id string) (*model.Role, error) {
@@ -154,6 +153,32 @@ func (r *Role) Delete(ctx context.Context, id string) error {
 	}
 
 	if result.DeletedCount == 0 {
+		return fmt.Errorf("%s: %w", op, def.ErrNotFound)
+	}
+
+	return nil
+}
+
+func (r *Role) Update(ctx context.Context, role *model.Role) error {
+	const op = "mongo_repo.Role.Update"
+
+	role.UpdatedAt = time.Now()
+
+	filter := bson.M{"_id": role.ID}
+	update := bson.M{
+		"$set": bson.M{
+			"name":           role.Name,
+			"updated_at":     role.UpdatedAt,
+			"permission_ids": role.PermissionIDs,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if result.MatchedCount == 0 {
 		return fmt.Errorf("%s: %w", op, def.ErrNotFound)
 	}
 
