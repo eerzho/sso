@@ -1,4 +1,4 @@
-.PHONY: build up down logs restart swagger
+.PHONY: build up down logs restart swagger fixture
 
 build:
 	docker compose build
