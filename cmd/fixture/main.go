@@ -7,6 +7,7 @@ import (
 	"sso/internal/repo/mongo_repo"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
@@ -49,18 +50,28 @@ func main() {
 }
 
 func getDefaultUser() *model.User {
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
+
 	return &model.User{
 		Email:    "default@test.com",
 		Name:     "default",
-		Password: "password",
+		Password: string(passwordHash),
 	}
 }
 
 func getAdminUser() *model.User {
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
+
 	return &model.User{
 		Email:    "admin@test.com",
 		Name:     "admin",
-		Password: "password",
+		Password: string(passwordHash),
 	}
 }
 
