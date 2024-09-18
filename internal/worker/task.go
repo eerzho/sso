@@ -1,5 +1,7 @@
 package worker
 
+import "context"
+
 type Task interface {
-	Execute() error
+	Execute(ctx context.Context) error
 }

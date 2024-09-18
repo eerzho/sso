@@ -45,7 +45,7 @@ func (p *Pool) worker(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case task := <-p.tasks:
-			err := task.Execute()
+			err := task.Execute(ctx)
 			if err != nil {
 				p.lg.Error(err.Error())
 			}

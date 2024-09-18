@@ -6,23 +6,21 @@ import (
 )
 
 type RemoveRole struct {
-	ctx      context.Context
-	userRepo UserRepo
 	roleID   string
+	userRepo UserRepo // TODO: ??? может лучше сразу создать в NewRemoveRole и не ебаться с прокидыванием через roleRepo ???
 }
 
-func NewRemoveRole(ctx context.Context, userRepo UserRepo, roleID string) *RemoveRole {
+func NewRemoveRole(userRepo UserRepo, roleID string) *RemoveRole {
 	return &RemoveRole{
-		ctx:      ctx,
-		userRepo: userRepo,
 		roleID:   roleID,
+		userRepo: userRepo,
 	}
 }
 
-func (r *RemoveRole) Execute() error {
+func (r *RemoveRole) Execute(ctx context.Context) error {
 	const op = "task.RemoveRole.Execute"
 
-	err := r.userRepo.RemoveRole(r.ctx, r.roleID)
+	err := r.userRepo.RemoveRole(ctx, r.roleID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
