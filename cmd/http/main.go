@@ -18,7 +18,7 @@ func main() {
 	app := app.MustNew()
 	server := setup(app)
 
-	worker.SetupDefaultPool(app.Lg, 10)
+	worker.SetupDefaultPool(app.Lg, app.Cfg.WorkerPool.Count)
 	defer worker.StopDefaultPool()
 
 	errChan := make(chan error, 1)

@@ -8,11 +8,12 @@ import (
 
 type (
 	Config struct {
-		IsDebug bool `env:"IS_DEBUG" env-default:"0"`
-		HTTP  HTTP
-		Log   Log
-		Mongo Mongo
-		JWT   JWT
+		IsDebug    bool `env:"IS_DEBUG" env-default:"0"`
+		HTTP       HTTP
+		Log        Log
+		Mongo      Mongo
+		JWT        JWT
+		WorkerPool WorkerPool
 	}
 
 	HTTP struct {
@@ -31,6 +32,10 @@ type (
 
 	JWT struct {
 		Secret string `env:"JWT_SECRET" env-required:"true"`
+	}
+
+	WorkerPool struct {
+		Count int `env:"WORKER_POOL_COUNT" env-default:"10"`
 	}
 )
 

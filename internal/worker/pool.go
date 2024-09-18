@@ -6,17 +6,17 @@ import (
 )
 
 type Pool struct {
-	lg          *slog.Logger
-	tasks       chan Task
-	workerCount int
-	cancelFunc  context.CancelFunc
+	lg         *slog.Logger
+	count      int
+	tasks      chan Task
+	cancelFunc context.CancelFunc
 }
 
-func NewPool(lg *slog.Logger, workerCount int) *Pool {
+func NewPool(lg *slog.Logger, count int) *Pool {
 	return &Pool{
-		lg:          lg,
-		tasks:       make(chan Task, workerCount * 5),
-		workerCount: workerCount,
+		lg:    lg,
+		count: count,
+		tasks: make(chan Task, count*5),
 	}
 }
 
@@ -24,7 +24,7 @@ func (p *Pool) Start(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	p.cancelFunc = cancel
 
-	for i := 0; i < p.workerCount; i++ {
+	for i := 0; i < p.count; i++ {
 		go p.worker(ctx)
 	}
 }
