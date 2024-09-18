@@ -6,8 +6,6 @@ import (
 	_ "sso/docs"
 	"sso/internal/app"
 	v1 "sso/internal/handler/v1"
-	"sso/internal/repo/mongo_repo"
-	"sso/internal/srvc"
 )
 
 // @Title sso http api
@@ -19,31 +17,10 @@ import (
 func New(app *app.App) http.Handler {
 	mux := http.NewServeMux()
 
-	// repo
-	userRepo := mongo_repo.NewUser(app.Mng)
-	refreshTokenRepo := mongo_repo.NewRefreshToken(app.Mng)
-	roleRepo := mongo_repo.NewRole(app.Mng)
-	permissionRepo := mongo_repo.NewPermission(app.Mng)
-
-	// srvc
-	permissionSrvc := srvc.NewPermission(permissionRepo)
-	roleSrvc := srvc.NewRole(roleRepo, permissionSrvc)
-	userSrvc := srvc.NewUser(userRepo, roleSrvc)
-	refreshTokenSrvc := srvc.NewRefreshToken(refreshTokenRepo)
-	authSrvc := srvc.NewAuth(app.Cfg.JWT.Secret, userSrvc, refreshTokenSrvc)
-
 	// handler
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	handler := v1.New(
-		mux, 
-		app, 
-		"/api/v1", 
-		userSrvc, 
-		authSrvc, 
-		roleSrvc,
-		permissionSrvc,
-	)
+	handler := v1.New(mux, app, "/api/v1")
 
 	return handler
 }

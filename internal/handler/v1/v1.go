@@ -8,24 +8,16 @@ import (
 	"sso/internal/handler/v1/response"
 )
 
-func New(
-	mux *http.ServeMux,
-	app *app.App,
-	prefix string,
-	userSrvc UserSrvc,
-	authSrvc AuthSrvc,
-	roleSrvc RoleSrvc,
-	permissionSrvc PermissionSrvc,
-) http.Handler {
+func New(mux *http.ServeMux, app *app.App, prefix string) http.Handler {
 	rp := request.NewParser()
 	rb := response.NewBuilder(app.Cfg.IsDebug, app.Lg)
 
-	authMwr := mwr.NewAuth(rb, authSrvc, userSrvc)
+	authMwr := mwr.NewAuth(rb, app.Srvcs.Auth, app.Srvcs.User)
 
-	newUser(mux, prefix, rp, rb, authMwr, userSrvc)
-	newAuth(mux, prefix, rp, rb, authMwr, authSrvc)
-	newRole(mux, prefix, rp, rb, authMwr, roleSrvc)
-	newPermission(mux, prefix, rp, rb, authMwr, permissionSrvc)
+	newUser(mux, prefix, rp, rb, authMwr, app.Srvcs.User)
+	newAuth(mux, prefix, rp, rb, authMwr, app.Srvcs.Auth)
+	newRole(mux, prefix, rp, rb, authMwr, app.Srvcs.Role)
+	newPermission(mux, prefix, rp, rb, authMwr, app.Srvcs.Permission)
 
 	reqIDMwr := mwr.NewRequestId()
 	reqLgMwr := mwr.NewRequestLogger(app.Lg)
