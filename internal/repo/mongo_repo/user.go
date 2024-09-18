@@ -198,3 +198,29 @@ func (u *User) GetByEmail(ctx context.Context, email string) (*model.User, error
 
 	return &user, nil
 }
+
+func (u *User) RemoveRole(ctx context.Context, roleID string) error {
+	const op = "mongo_repo.User.RemoveRole"
+
+	roleIDObj, err := primitive.ObjectIDFromHex(roleID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	filter := bson.M{
+		"role_ids": roleIDObj,
+	}
+
+	update := bson.M{
+		"$pull": bson.M{
+			"role_ids": roleIDObj,
+		},
+	}
+
+	_, err = u.collection.UpdateMany(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}

@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"sso/internal/app"
 	"sso/internal/handler"
+	"sso/internal/worker"
 	"syscall"
 	"time"
 )
@@ -16,6 +17,9 @@ import (
 func main() {
 	app := app.MustNew()
 	server := setup(app)
+
+	worker.InitDefaultPool(app.Lg, 10)
+	defer worker.StopDefaultPool()
 
 	errChan := make(chan error, 1)
 	stopChan := make(chan os.Signal, 1)
