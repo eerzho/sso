@@ -7,7 +7,7 @@ import (
 
 var defaultPool *Pool
 
-func InitDefaultPool(lg *slog.Logger, workerCount int) {
+func SetupDefaultPool(lg *slog.Logger, workerCount int) {
 	defaultPool = NewPool(lg, workerCount)
 	defaultPool.Start(context.Background())
 }
